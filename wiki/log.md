@@ -4011,3 +4011,26 @@ Log cronologico append-only. Ogni riga: data, azione, pagine toccate.
   comuni-coperti rigenerata 599→692, tutti gli header di provincia
   aggiornati), `etl-pipeline.md` (nuova sezione "Estensione generale,
   metodo DB-free — 93 comuni, record").
+
+- **2026-07-24** (seguito) — INGEST: `git pull` (portati i 93 comuni
+  della sessione DB-free descritta sopra), poi uniti. **Scoperto che
+  `temperature_data_extra.csv` (370MB) era interamente ridondante** —
+  tutti i suoi 591 comuni erano già stati importati nel giro unico del
+  2026-07-23, verificato prima di eliminarlo — ricreato da zero come
+  accumulatore pulito con solo i 93 comuni nuovi (evita di continuare a
+  gonfiare un file ormai inutile). File della collaboratrice eliminati
+  dopo l'unione.
+
+  Rilanciato il download generale sui comuni ancora mancanti (692
+  coperti, 488 mancanti all'avvio): **19/438 riusciti** prima del blocco
+  su "Belforte Monferrato" (confermato dal blocco anche sul successivo
+  "Fresonara"). Uniti allo stesso file (93 → 112 comuni). **Nessun
+  import né ricalcolo**, per scelta esplicita dell'utente (stessa
+  decisione del 2026-07-20, ancora valida).
+
+  Ricalcolata la tabella "Comuni già coperti": **711/1180 comuni**
+  coperti (era 692).
+
+  Pagine aggiornate: `comuni-coperti.md` (unione del lotto del collega,
+  reset dell'accumulatore ridondante, esito del nuovo giro di download,
+  tabella comuni-coperti rigenerata 692→711).

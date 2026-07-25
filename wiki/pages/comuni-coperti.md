@@ -36,6 +36,23 @@ Tabella "Comuni già coperti" sotto rigenerata di conseguenza:
 **692/1180 comuni coperti** (era 599), **488 ancora scaricabili
 liberamente**.
 
+**Aggiornamento 2026-07-24 (seguito) — unione + reset dell'accumulatore +
+nuovo giro dal titolare/IA**: dopo `git pull`, uniti i 93 comuni sopra.
+**`temperature_data_extra.csv` (370MB) era interamente ridondante** — tutti
+i suoi 591 comuni erano già stati importati nel giro unico del 2026-07-23
+(vedi sotto) — verificato prima di eliminarlo (nessun comune fuori dal
+DB), poi ricreato da zero come accumulatore pulito con solo i 93 comuni
+di oggi (902.286 righe), invece di appendere a un file ormai inutile.
+Rilanciato subito dopo il download generale sui comuni ancora mancanti
+(692 coperti, 488 mancanti all'avvio): **bloccato dopo 19/438** (su
+"Belforte Monferrato", confermato dal blocco anche sul successivo
+"Fresonara"). I 19 riusciti uniti allo stesso file (93 → **112 comuni**,
+zero sovrapposizioni). Tabella "Comuni già coperti" sotto ricalcolata:
+**711/1180 comuni coperti** (era 692), **469 ancora scaricabili
+liberamente**. **Nessun import né ricalcolo**, come da decisione del
+2026-07-20 (ancora valida: nessuna nuova indicazione di farlo prima
+della prossima sessione).
+
 **Aggiornamento 2026-07-23 (pomeriggio) — GIRO UNICO DI IMPORT ESEGUITO,
 234 → 599 comuni**: su richiesta esplicita dell'utente, fatto il giro
 unico di import + ricalcolo rimandato dal 2026-07-20. Consolidati tutti i
@@ -614,7 +631,8 @@ importare per evitare doppioni.
 
 ## Comuni già coperti (NON riscaricare questi)
 
-### Alessandria (139/187 comuni coperti)
+
+### Alessandria (158/187 comuni coperti)
 
 | Comune | Codice ISTAT |
 |---|---|
@@ -624,6 +642,7 @@ importare per evitare doppioni.
 | Alfiano Natta | 006004 |
 | Alice Bel Colle | 006005 |
 | Alluvioni Piovera | 006192 |
+| Altavilla Monferrato | 006007 |
 | Arquata Scrivia | 006009 |
 | Avolasca | 006010 |
 | Balzola | 006011 |
@@ -639,6 +658,7 @@ importare per evitare doppioni.
 | Bozzole | 006023 |
 | Brignano-Frascata | 006024 |
 | Cabella Ligure | 006025 |
+| Camagna Monferrato | 006026 |
 | Camino | 006027 |
 | Cantalupo Ligure | 006028 |
 | Capriata d'Orba | 006029 |
@@ -656,8 +676,11 @@ importare per evitare doppioni.
 | Cassine | 006043 |
 | Cassinelle | 006044 |
 | Castellazzo Bormida | 006047 |
+| Castelletto d'Erro | 006048 |
+| Castelletto d'Orba | 006049 |
 | Castelletto Merli | 006050 |
 | Castelletto Monferrato | 006051 |
+| Castelnuovo Bormida | 006052 |
 | Castelnuovo Scrivia | 006053 |
 | Castelspina | 006054 |
 | Cavatore | 006055 |
@@ -678,6 +701,7 @@ importare per evitare doppioni.
 | Frugarolo | 006075 |
 | Fubine Monferrato | 006076 |
 | Gabiano | 006077 |
+| Gamalero | 006078 |
 | Garbagna | 006079 |
 | Gavi | 006081 |
 | Giarole | 006082 |
@@ -694,6 +718,7 @@ importare per evitare doppioni.
 | Molare | 006095 |
 | Molino dei Torti | 006096 |
 | Mombello Monferrato | 006097 |
+| Momperone | 006098 |
 | Moncestino | 006099 |
 | Mongiardino Ligure | 006100 |
 | Monleale | 006101 |
@@ -701,6 +726,8 @@ importare per evitare doppioni.
 | Montaldeo | 006103 |
 | Montecastello | 006105 |
 | Montechiaro d'Acqui | 006106 |
+| Montegioco | 006107 |
+| Montemarzino | 006108 |
 | Morano sul Po | 006109 |
 | Morbello | 006110 |
 | Morsasco | 006112 |
@@ -708,6 +735,7 @@ importare per evitare doppioni.
 | Novi Ligure | 006114 |
 | Occimiano | 006115 |
 | Odalengo Grande | 006116 |
+| Odalengo Piccolo | 006117 |
 | Olivola | 006118 |
 | Ovada | 006121 |
 | Oviglio | 006122 |
@@ -725,6 +753,8 @@ importare per evitare doppioni.
 | Quargnento | 006141 |
 | Quattordio | 006142 |
 | Rivalta Bormida | 006144 |
+| Rivarone | 006145 |
+| Rocca Grimalda | 006147 |
 | Roccaforte Ligure | 006146 |
 | Rocchetta Ligure | 006148 |
 | Rosignano Monferrato | 006149 |
@@ -741,12 +771,16 @@ importare per evitare doppioni.
 | Sezzadio | 006161 |
 | Silvano d'Orba | 006162 |
 | Solero | 006163 |
+| Solonghello | 006164 |
 | Spigno Monferrato | 006165 |
 | Spineto Scrivia | 006166 |
+| Stazzano | 006167 |
 | Strevi | 006168 |
 | Tagliolo Monferrato | 006169 |
+| Tassarolo | 006170 |
 | Terruggia | 006171 |
 | Terzo | 006172 |
+| Ticineto | 006173 |
 | Tortona | 006174 |
 | Valenza | 006177 |
 | Valmacca | 006178 |
@@ -756,6 +790,9 @@ importare per evitare doppioni.
 | Villadeati | 006182 |
 | Villalvernia | 006183 |
 | Villanova Monferrato | 006185 |
+| Visone | 006187 |
+| Volpedo | 006188 |
+| Volpeglino | 006189 |
 | Voltaggio | 006190 |
 
 ### Asti (67/117 comuni coperti)
@@ -953,8 +990,8 @@ importare per evitare doppioni.
 | Monasterolo di Savigliano | 004128 |
 | Monchiero | 004129 |
 | Mondovì | 004130 |
-| Monterosso Grana | 004139 |
 | Montà | 004133 |
+| Monterosso Grana | 004139 |
 | Morozzo | 004144 |
 | Murello | 004146 |
 | Narzole | 004147 |
