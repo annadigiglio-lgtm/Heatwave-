@@ -513,6 +513,17 @@ spaziale), commenti/docstring in `Home.py`/`queries.py`/`data_source.py`,
 oltre a `README.md` (due punti) e `wiki/pages/gis-maps.md` (fermo a "177
 comuni" nonostante le mappe QGIS fossero già state rigenerate il 23/7).
 
+### 2026-07-28 — verifica servizio Postgres: claim obsoleto corretto
+
+Su richiesta dell'utente ("cosa manca da fare al progetto?" → servizio
+Postgres), verificato lo stato reale invece di fidarsi del claim esistente
+in "Prossimi passi": `Get-Service postgresql-x64-16` → `Running` /
+`Automatic`; processo `pg_ctl.exe` con parent `services.exe` e orario di
+avvio coincidente col boot del PC. Il servizio **è già** un vero servizio
+Windows auto-avviabile — non serviva alcuna azione. Corretto il punto 3 di
+"Prossimi passi" di conseguenza. Non è noto quando questo sia cambiato
+rispetto a quanto documentato in precedenza.
+
 ## Prossimi passi
 
 Tutti minori/non bloccanti — il nucleo pianificato del progetto è
@@ -526,9 +537,16 @@ completo:
    API, vedi [Modello Dati](data-model.md)); esteso a 98 comuni il
    2026-07-17 e a 177 il 2026-07-18; resta `NULL` per il resto dei 1180
    comuni
-3. Riavviare `postgresql-x64-16` come vero servizio Windows (oggi gira via
-   `pg_ctl` manuale — il servizio in sé risulta "Stopped" e non
-   ripartirebbe da solo dopo un riavvio del PC)
+3. ~~Riavviare `postgresql-x64-16` come vero servizio Windows~~ — **verificato
+   il 2026-07-28: già a posto**, claim obsoleto. Il servizio risulta
+   `Status: Running`, `StartType: Automatic`; `pg_ctl.exe` è avviato da
+   `services.exe` (Service Control Manager) e il suo orario di avvio
+   coincide esattamente col boot del PC (12g 10h di uptime) — quindi
+   riparte da solo dopo un riavvio, contrariamente a quanto scritto in
+   precedenza. Non è chiaro quando/come sia stato risolto (probabilmente
+   durante un update di PostgreSQL o una configurazione manuale non
+   documentata). Connessione al DB confermata (`psql` → PostgreSQL 16.14,
+   `heatwave_piemonte` raggiungibile).
 4. Ricordarsi di rifare `REFRESH MATERIALIZED VIEW` dopo ogni futuro
    caricamento di `temperature` (vedi [Modello Dati](data-model.md)) —
    incluso dopo l'import dei 35 comuni extra descritti sopra

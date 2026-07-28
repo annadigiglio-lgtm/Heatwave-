@@ -4034,3 +4034,13 @@ Log cronologico append-only. Ogni riga: data, azione, pagine toccate.
   Pagine aggiornate: `comuni-coperti.md` (unione del lotto del collega,
   reset dell'accumulatore ridondante, esito del nuovo giro di download,
   tabella comuni-coperti rigenerata 692→711).
+
+- **2026-07-28** — QUERY: verifica stato servizio Postgres. Su richiesta
+  dell'utente ("cosa manca al progetto?" → servizio Postgres), controllato lo
+  stato reale invece di fidarsi del claim in "Prossimi passi" di
+  `project-status.md`. Trovato: `postgresql-x64-16` è `Running`/`Automatic`,
+  `pg_ctl.exe` avviato da `services.exe` con orario coincidente col boot del
+  PC — è già un vero servizio Windows auto-avviabile, claim obsoleto.
+  Connessione DB confermata (psql, PostgreSQL 16.14). Pagine aggiornate:
+  `project-status.md` (punto 3 di "Prossimi passi" segnato fatto/obsoleto,
+  nuova sezione in cronologia).
