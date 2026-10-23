@@ -3,7 +3,7 @@
 Raccolto il 2026-07-19 su richiesta esplicita dell'utente: confrontare i
 risultati del progetto con report scientifici/istituzionali di ISTAT, ARPA,
 ISPRA e altri, oltre alla letteratura già raccolta il 2026-07-16 (vedi
-`wiki/pages/paper-scientifico.md`). I PDF sono scaricati per intero in
+`paper/PIANO-ARTICOLO.md`). I PDF sono scaricati per intero in
 questa cartella (l'utente ha chiesto esplicitamente di poterli leggere,
 non solo il link) — questo file resta comunque la fonte di verità con
 link diretto, utile per ri-scaricarli se i binari venissero rimossi in
@@ -67,7 +67,7 @@ aperto legittima (l'utente ha chiesto esplicitamente di poterli leggere).
 Nessuna di queste richiede download: sono i riferimenti standard dei
 metodi statistici già usati nel progetto (`src/analysis/`), da citare
 perché la pagina dashboard "Sintesi della Ricerca" (in preparazione,
-07, vedi `wiki/pages/paper-scientifico.md`) cita ogni affermazione, non
+07, vedi `paper/PIANO-ARTICOLO.md`) cita ogni affermazione, non
 solo i risultati.
 
 - Mann, H.B. (1945). *Nonparametric Tests Against Trend*. **Econometrica**,

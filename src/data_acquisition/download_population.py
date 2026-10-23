@@ -3,14 +3,14 @@ download_population.py - Popola municipalities.population con dati ISTAT reali.
 
 `population` esiste nello schema (`sql/01_init_database.sql`) ma non era mai
 stato popolato (NULL per tutti i 1180 comuni) - vedi
-wiki/pages/paper-scientifico.md. Necessario come covariata esplicativa per
+paper/PIANO-ARTICOLO.md. Necessario come covariata esplicativa per
 il paper scientifico (densita' demografica, uso del suolo urbano).
 
 Fonte: demo.istat.it ("Popolazione residente per eta' e sesso"), un file ZIP
 per provincia, CSV con una riga per comune/eta'/sesso; la riga con eta'=999
 e' il totale per comune. Non richiede API key/account.
 
-Investigazione 2026-07-16 (vedi wiki/pages/paper-scientifico.md per il
+Investigazione 2026-07-16 (vedi paper/PIANO-ARTICOLO.md per il
 dettaglio completo): il nuovo sistema SDMX (esploradati.istat.it) ha la
 struttura giusta (stessi codici istat_code) ma non restituisce osservazioni
 per questo dataset; il vecchio portale dati.istat.it e' dismesso (redirect

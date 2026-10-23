@@ -1,61 +1,70 @@
-# Glossario dei concetti statistici e GIS
+# Glossario
 
-**Sorgenti**: `README.md`, `docs/ROADMAP.md`, `docs/ARCHITECTURE.md`,
-`src/analysis/*.py` (implementati ed eseguiti su dati reali il 2026-07-15).
+**Sorgenti**: `src/analysis/`, `src/machine_learning/`, [Chatbot](chatbot.md),
+lezioni 16–21 del corso. Utile per rispondere alle domande dell'orale.
 
-Pensato come ponte tra la formazione in Scienze Naturali dell'autore e il
-vocabolario tipico di data engineering/BI.
+## Clima e statistica
 
-- **Test di Mann-Kendall** — test statistico non parametrico per rilevare un
-  trend monotono (crescente/decrescente) in una serie temporale, senza
-  assumere normalità dei dati. Usato per verificare se la temperatura media
-  annuale ha un trend reale nel 2000-2025, distinguendolo dal rumore
-  anno-su-anno. **Implementato** in `src/analysis/trend_analysis.py`
-  (`pymannkendall.original_test`) — risultato reale: 7 comuni su 8 mostrano
-  un trend crescente significativo (p<0.05), vedi [Stato del Progetto](project-status.md).
-- **Regressione lineare del trend** — stima della pendenza °C/anno (o
-  °C/decade) per comune; complementare a Mann-Kendall (che dice *se* c'è un
-  trend, la regressione dice *quanto*). **Implementata** in
-  `trend_analysis.py` (`scipy.stats.linregress`) — trend reali tra +0.4 e
-  +1.0 °C/decade nei comuni con trend significativo.
-- **Indice di Moran (Moran's I)** — misura di autocorrelazione spaziale:
-  quantifica se comuni vicini hanno valori di temperatura simili (clustering
-  spaziale) più di quanto ci si aspetterebbe per caso. **Implementato** in
-  `src/analysis/spatial_analysis.py` (matrice pesi spaziali = inverso della
-  distanza haversine, row-standardized; significatività via test di
-  permutazione, più robusto dell'approssimazione normale asintotica con un
-  campione piccolo). **Limite importante**: con solo 8 unità spaziali (i
-  comuni capoluogo, unica granularità con temperature reali — vedi
-  [ETL](etl-pipeline.md)) il risultato (I=-0.096, p=0.73, non significativo)
-  è illustrativo, non un'analisi di autocorrelazione spaziale statisticamente
-  robusta. Servirebbero dati per molti più comuni.
-- **STL decomposition** (Seasonal-Trend decomposition using Loess) — scompone
-  una serie temporale giornaliera in componenti trend, stagionalità e
-  residuo. Utile per isolare il trend di riscaldamento dalla normale
-  variazione stagionale (estate/inverno). **Implementata** in
-  `src/analysis/seasonal_analysis.py` (`statsmodels.tsa.seasonal.STL`,
-  periodo 365 giorni, `robust=True`) per tutti gli 8 comuni — ampiezza
-  stagionale reale ~28-32°C, coerente con un clima continentale.
-- **IQR outlier method** — un valore è outlier se fuori da
-  `[Q1 - 1.5·IQR, Q3 + 1.5·IQR]` dove `IQR = Q3 - Q1`. Metodo robusto (non
-  assume normalità), implementato in `DataCleaner.detect_outliers()`
-  (vedi [ETL Pipeline](etl-pipeline.md)).
-- **Clustering K-means su feature climatiche** — raggruppa comuni in zone
-  climatiche omogenee. **Implementato** in `spatial_analysis.py`, usando
-  temperatura media, giorni >30°C e giorni >35°C (standardizzati) come
-  feature, k=3. Risultato reale e geograficamente sensato: cluster
-  Alessandria/Asti/Vercelli (pianura, più caldo), Biella/Cuneo (pedemontano,
-  più fresco), Novara/Torino/Verbania (intermedio). Anche qui, n=8 comuni è
-  un campione piccolo — il risultato è indicativo, non definitivo.
-- **Ondata di calore (definizione operativa del progetto)** — sequenza di
-  ≥3 giorni consecutivi con `temp_max` sopra una soglia (30/35/40°C),
-  implementata in `identify_heatwaves()` (vedi [Modello Dati](data-model.md)).
-  È una definizione semplificata rispetto a indici climatologici standard
-  (es. WMO usa percentili locali anziché soglie fisse), scelta qui per
-  semplicità e interpretabilità in un progetto portfolio. Statistiche
-  aggregate (durata, intensità, frequenza per anno) in
-  `src/analysis/heatwave_stats.py`.
-- **Anomalia termica** — differenza tra la temperatura osservata e una
-  climatologia di riferimento (qui 1961-1990). Nel dataset attuale (che parte
-  dal 2000) questa baseline non è disponibile direttamente: va importata da
-  altra fonte (es. Copernicus/ARPA) o approssimata. **Non ancora implementata**.
+- **Ondata di calore (definizione del progetto)**: almeno 3 giorni
+  consecutivi con temperatura massima sopra 35 °C. È più semplice degli
+  indici a percentili locali usati dalla WMO.
+- **Rianalisi**: ricostruzione del clima passato che combina un modello
+  fisico con le osservazioni (Open-Meteo). Non è una misura di stazione.
+- **Bias**: differenza media tra due fonti (Open-Meteo − ARPA).
+- **Mann-Kendall**: test non parametrico che verifica se una serie ha un
+  trend monotono, senza assumere dati normali.
+- **Regressione lineare del trend**: pendenza in °C per decennio.
+- **STL**: scompone una serie in trend + stagionalità + residuo.
+- **IQR**: un valore è anomalo se cade fuori da [Q1 − 1,5·IQR, Q3 + 1,5·IQR].
+- **Moran's I**: misura quanto valori simili stanno vicini nello spazio;
+  la significatività si stima permutando i valori a caso.
+- **Regressione a errore spaziale**: regressione in cui l'errore di un
+  comune dipende da quello dei vicini (parametro λ).
+- **VIF**: indica quanto una variabile è ridondante rispetto alle altre
+  (oltre 5 è da tenere d'occhio).
+
+## Machine Learning
+
+- **Supervisionato / non supervisionato**: con o senza variabile target da
+  imparare (regressione vs K-Means).
+- **Pipeline**: sequenza preprocessing + modello trattata come un oggetto
+  unico; evita la fuga di informazioni tra train e test.
+- **StandardScaler**: porta ogni feature a media 0 e deviazione standard 1.
+- **K-Means**: divide i dati in k gruppi minimizzando la distanza dai centroidi.
+- **Silhouette score**: da −1 a 1, quanto ogni punto è più vicino al
+  proprio cluster che agli altri.
+- **PCA**: riduce le feature a poche componenti che conservano la massima varianza.
+- **Random Forest**: media di molti alberi di decisione addestrati su
+  campioni diversi; robusto e interpretabile con l'importanza delle feature.
+- **MLP**: rete neurale a strati completamente connessi; è il caso più
+  semplice di deep learning.
+- **Cross-validation (KFold)**: addestra e valuta k volte su parti diverse dei dati.
+- **GroupKFold**: come KFold, ma un gruppo intero (qui una provincia) sta
+  sempre tutto nello stesso fold; misura quanto il modello generalizza a zone nuove.
+- **GridSearchCV**: prova combinazioni di iperparametri con cross-validation.
+- **MAE / RMSE / R²**: errore medio assoluto, errore quadratico medio
+  (penalizza di più gli errori grandi), quota di varianza spiegata.
+- **Permutation importance**: quanto peggiora il modello mescolando una feature.
+
+## LLM, agenti e RAG
+
+- **LLM**: modello linguistico di grandi dimensioni. Nel progetto gira in
+  locale con **Ollama**.
+- **System prompt**: istruzioni fisse che definiscono ruolo e regole del chatbot.
+- **Few-shot**: esempi inseriti nel prompt per mostrare il formato atteso.
+- **Agente**: LLM in un ciclo ragiona → sceglie un tool → legge il
+  risultato → decide se continuare.
+- **Tool / function calling**: funzione Python che l'LLM può chiedere di
+  eseguire; il codice la esegue solo se è nella whitelist.
+- **Prompt injection**: testo che cerca di far ignorare al modello le sue regole.
+- **RAG**: prima si recuperano i documenti pertinenti, poi si genera la
+  risposta usando quei documenti come contesto.
+- **Embedding**: vettore numerico che rappresenta il significato di un
+  testo; testi simili hanno vettori vicini. Lo produce una rete neurale
+  pre-addestrata (sentence-transformers).
+- **Vector database (ChromaDB)**: archivio di embedding con ricerca per similarità.
+- **Chunking**: suddivisione dei documenti in pezzi (circa 300 parole con
+  sovrapposizione) da indicizzare.
+- **Memoria a finestra scorrevole**: si passano all'LLM solo gli ultimi N
+  scambi della conversazione.
+- **Allucinazione**: risposta plausibile ma non supportata dai dati.

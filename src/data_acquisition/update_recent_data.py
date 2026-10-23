@@ -43,7 +43,7 @@ def load_municipalities_with_data() -> pd.DataFrame:
 
     Ordinati con i comuni che hanno anche copertura ARPA per primi (`has_arpa`
     DESC): la quota giornaliera Open-Meteo è imprevedibile (vedi
-    wiki/pages/comuni-coperti.md) e può bloccare il run a metà, quindi
+    wiki/pages/data-sources.md) e può bloccare il run a metà, quindi
     conviene garantire prima il delta dei comuni utili al confronto
     ARPA/Open-Meteo, poi il resto in ordine alfabetico.
     """

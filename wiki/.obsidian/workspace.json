@@ -14,7 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "pages/project-status.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
@@ -183,7 +183,7 @@
       "bases:Crea nuova Base": false
     }
   },
-  "active": "7267d39c82e18fea",
+  "active": "f8078c8f846f6add",
   "lastOpenFiles": [
     "log.md.tmp.19992.5991a1efabea",
     "pages/dashboard.md.tmp.19992.9fe190d68ec9",

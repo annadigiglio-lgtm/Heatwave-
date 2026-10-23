@@ -3,7 +3,7 @@ download_arpa.py - Scarica temperature giornaliere osservate da ARPA Piemonte
 per la validazione delle stime Open-Meteo (dati di rianalisi/modello, non
 osservazioni dirette) gia' caricate in `temperature`.
 
-Contesto: fase 1 del piano paper (wiki/pages/paper-scientifico.md), priorita'
+Contesto: fase 1 del piano paper (paper/PIANO-ARTICOLO.md), priorita'
 piu' alta del piano, mai risolta prima. L'URL configurato in `config.yaml`
 (`arpa_piemonte.url`) risponde 404 da sempre; `ArpaPiemonteDownloader` in
 `download_data.py` non ha mai funzionato (nessun endpoint dietro quell'URL) -

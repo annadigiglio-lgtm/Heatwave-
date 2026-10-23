@@ -7,11 +7,11 @@ cover"*
 **Stato di questo documento**: bozza scheletro, in italiano per facilitare la
 scrittura collaborativa. Andrà tradotto in inglese prima di qualunque
 sottomissione reale (vedi target di pubblicazione in
-`wiki/pages/paper-scientifico.md`). Le sezioni marcate **[FATTO]** si basano
+`paper/PIANO-ARTICOLO.md`). Le sezioni marcate **[FATTO]** si basano
 su risultati reali già calcolati nel progetto; quelle marcate **[DA FARE]**
 dipendono da lavoro non ancora completato (estensione a 300 comuni, uso del
 suolo, popolazione, modello a errore spaziale — vedi lo stato dettagliato in
-`wiki/pages/paper-scientifico.md`). La validazione ARPA (§2.1, §3.6, §4.3)
+`paper/PIANO-ARTICOLO.md`). La validazione ARPA (§2.1, §3.6, §4.3)
 è **[FATTO]** dal 2026-07-18. Non cancellare i marcatori finché il
 lavoro sottostante non è davvero concluso: servono a non perdere traccia di
 cosa è verificato e cosa no.
@@ -80,7 +80,7 @@ città).
 
 - Temperatura giornaliera (max/min/media) da Open-Meteo Historical Weather
   API, 2000-2025 (26 anni), per **44 comuni** (in estensione a **300**,
-  vedi `wiki/pages/paper-scientifico.md` per lo stato). Selezione spaziale
+  vedi `paper/PIANO-ARTICOLO.md` per lo stato). Selezione spaziale
   via campionamento "farthest-point" per provincia (non i comuni più
   vicini al capoluogo, ma quelli che massimizzano la copertura geografica).
 - Confini amministrativi e geometrie: tutti i 1180 comuni piemontesi

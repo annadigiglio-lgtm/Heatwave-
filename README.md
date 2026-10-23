@@ -96,8 +96,8 @@ calcolato, senza bisogno di un database live.
 Per riprodurre l'intera pipeline in locale:
 
 ```bash
-git clone https://github.com/Anna-digiglio/Heatwave-Piemonte.git
-cd Heatwave-Piemonte
+git clone https://github.com/annadigiglio-lgtm/Heatwave-.git
+cd Heatwave-
 
 python -m venv .venv
 .venv\Scripts\activate       # Linux/Mac: source .venv/bin/activate

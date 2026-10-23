@@ -2,7 +2,7 @@
 spatial_regression.py - Modello esplicativo: temperatura ~ covariate.
 
 Prima fase quantitativa verso il modello del paper scientifico (fase 4 del
-piano in wiki/pages/paper-scientifico.md). OLS su `temp_mean_avg` (media
+piano in paper/PIANO-ARTICOLO.md). OLS su `temp_mean_avg` (media
 2000-2025, stessa variabile gia' usata per l'indice di Moran "grezzo" in
 spatial_analysis.py: I=0.132, p=0.001 su 63 comuni) contro le covariate
 esplicative ora disponibili in DB: elevazione, densita' di popolazione,

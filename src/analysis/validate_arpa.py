@@ -2,7 +2,7 @@
 validate_arpa.py - Validazione delle temperature Open-Meteo contro
 osservazioni di stazione reali ARPA Piemonte.
 
-Contesto: fase 1 del piano paper (wiki/pages/paper-scientifico.md). Le
+Contesto: fase 1 del piano paper (paper/PIANO-ARTICOLO.md). Le
 temperature in `temperature` sono dati di rianalisi/modello (Open-Meteo), non
 osservazioni dirette - un revisore lo contesterebbe per primo. Questo modulo
 confronta, per i comuni dove esiste una stazione ARPA reale (vedi

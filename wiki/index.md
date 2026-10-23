@@ -1,43 +1,42 @@
-# Indice — Wiki Heatwave Piemonte
+# Indice — Wiki Heatwave Piemonte (versione d'esame)
 
-Wiki mantenuta secondo il pattern descritto in `CLAUDE.md` (livello schema).
-Ogni pagina cita le sorgenti grezze da cui è sintetizzata — in caso di
-dubbio, la sorgente grezza (codice/SQL/config) prevale sempre sulla wiki.
+Wiki operativa per il progetto finale ITS. Descrive lo stato **reale** del
+codice: se qualcosa non coincide, prevalgono codice, `sql/` e `config.yaml`.
+I documenti in `docs/`, `PROJECT_SUMMARY.md` e `SIMPLIFICATION_SUMMARY.md`
+sono la pianificazione originale e non sono aggiornati.
 
-## Panoramica
+## Da dove partire
 
-- [Panoramica del progetto](pages/project-overview.md) — obiettivo, domande di ricerca, stack dichiarato
-- [Stato del progetto](pages/project-status.md) — **pianificato vs implementato**, prossimi passi ad alto impatto
-- [Articolo scientifico](pages/paper-scientifico.md) — piano verso una pubblicazione peer-reviewed: fasi, dati mancanti (uso del suolo/popolazione), letteratura da citare
+1. [Stato del progetto](pages/project-status.md) — requisiti d'esame: cosa c'è e cosa manca
+2. [Pipeline d'esame](pages/roadmap-esame.md) — fasi, dipendenze e cancelli di qualità
+3. [To-do per agenti](pages/todo-agenti.md) — task eseguibili con file, criteri e verifica
 
-## Architettura & infrastruttura
+## Progetto
 
-- [Architettura](pages/architecture.md) — flusso a livelli, struttura cartelle reale, pattern di codice
-- [Configurazione](pages/config-reference.md) — guida a `config.yaml`
+- [Panoramica](pages/project-overview.md) — problema, utenti, domande di ricerca, tecnologie
+- [Architettura](pages/architecture.md) — livelli dati → conoscenza → app, moduli del repository
+- [Configurazione](pages/config-reference.md) — `config.yaml` e variabili d'ambiente
 
 ## Dati
 
-- [Fonti dati](pages/data-sources.md) — Open-Meteo, Copernicus ERA5, ARPA, ISTAT, OSM (stato e bug noti)
-- [Modello dati](pages/data-model.md) — schema PostgreSQL/PostGIS: tabelle, viste, funzione `identify_heatwaves()`
-- [Pipeline ETL](pages/etl-pipeline.md) — extract/transform/load reali, gap noti
-- [Comuni già coperti](pages/comuni-coperti.md) — elenco dei 599 comuni già in `temperature` (218 con copertura ARPA completa), guida al formato per nuovi download collaborativi (evitare doppioni)
+- [Fonti dati](pages/data-sources.md) — Open-Meteo, ARPA, ISTAT, CORINE, NDVI; validazione ARPA
+- [Pipeline ETL](pages/etl-pipeline.md) — extract, transform, load, refresh
+- [Modello dati](pages/data-model.md) — tabelle PostGIS, KPI, snapshot Parquet
 
-## Analisi
+## Analisi, ML e AI
 
-- [Analisi statistica e spaziale](pages/statistical-analysis.md) — `src/analysis/`: trend (Mann-Kendall/regressione, 556/599 comuni significativi), ondate di calore (2.192 totali), STL, Moran's I (0.2115, p=0.001 su 599 comuni), clustering, modello a errore spaziale (temp ~ elevazione/popolazione/uso del suolo/NDVI — solo l'elevazione resta stabile su 5 estensioni), **validazione contro stazioni ARPA reali** (218/218 comuni, copertura completa, bias -1.52°C, correla con elevazione) — eseguita su dati reali
-- [Catalogo KPI](pages/kpi-catalog.md) — KPI definiti, formule, dove sono calcolati
-- [Query SQL](pages/sql-queries.md) — catalogo query di `sql/02_common_queries.sql`
-- [Glossario concetti](pages/concepts.md) — Mann-Kendall, Moran's I, STL, IQR, K-means, definizione di ondata di calore
+- [Analisi statistica](pages/statistical-analysis.md) — trend, STL, Moran's I, regressione spaziale, ARPA
+- [Machine Learning](pages/machine-learning.md) — K-Means (fatto), regressione supervisionata e PCA (da fare)
+- [Chatbot](pages/chatbot.md) — specifica di assistente con agenti, tool e RAG
 
-## Visualizzazione
+## Applicazione e qualità
 
-- [Mappe GIS](pages/gis-maps.md) — 3 progetti QGIS, **generati via PyQGIS ed eseguiti su dati reali**
-- [Dashboard](pages/dashboard.md) — dashboard Streamlit, **implementata, eseguita su dati reali e ampliata** (8 pagine, mappe coropletiche PostGIS), **restyling identità "calore" 2026-07-17**, **tema chiaro adattivo per hero/card/stats 2026-07-18**, **selettore fonte Open-Meteo/ARPA/Confronto in Analisi Temporale, Ondate di Calore e Analisi Spaziale 2026-07-18** (la pagina dedicata "Validazione Dati", nata e rimossa lo stesso giorno, è confluita nel selettore), **uso del suolo/popolazione/NDVI spostati dalla pagina Analisi Spaziale a una nuova pagina Contesto Territoriale 2026-07-19**, **nuova pagina Citazioni e Fonti (08) 2026-07-19** — bibliografia + fonti dati con link, in coda a tutte le altre, **nuova pagina Sintesi della Ricerca (06) 2026-07-19 (sera)** — riassunto divulgativo di dati/risultati con numeri live e ogni affermazione citata, inserita prima di Download Dati (rinumerato a 07) su richiesta esplicita dell'utente
+- [Dashboard e mappe](pages/dashboard.md) — pagine Streamlit, componenti, QGIS
+- [Test](pages/testing.md) — suite attuale e test da aggiungere
+- [Etica e limiti](pages/etica-e-limiti.md) — testi per la pagina 11, il README e le slide
+- [Glossario](pages/concepts.md) — statistica, ML, LLM, RAG: definizioni per l'orale
 
-## Qualità del codice
+## Fuori dalla wiki d'esame
 
-- [Test unitari](pages/testing.md) — 31 test pytest, **un bug reale trovato e corretto** in `DataCleaner.detect_outliers()`
-
----
-
-Vedi [log.md](log.md) per la cronologia degli aggiornamenti a questa wiki.
+- Piano dell'articolo scientifico: `paper/PIANO-ARTICOLO.md`
+- Cronologia tecnica completa: [log.md](log.md) (da non usare come lista di cose da fare)

@@ -1,46 +1,43 @@
-
 # Panoramica del progetto
 
-**Sorgenti**: `README.md`, `PROJECT_SUMMARY.md`
+**Sorgenti**: `README.md`, `src/`, `dashboard/`, requisiti del corso.
 
-Heatwave Piemonte è un progetto portfolio (Data Engineering + Data Science +
-GIS) che analizza l'evoluzione delle temperature e delle ondate di calore nei
-comuni e nelle province piemontesi dal 2000 a oggi. È pensato per dimostrare
-competenze in Python, SQL, ETL, PostGIS, QGIS e Business Intelligence a un
-livello intermedio, realistico per un percorso Data Manager for BI Software
-Developer (ITS) con base in Scienze Naturali.
+**Heatwave Piemonte** analizza temperature e ondate di calore nei comuni
+piemontesi dal 2000 a oggi e le rende consultabili tramite una dashboard
+Streamlit e un assistente AI che risponde sui dati e sui metodi.
+
+È il progetto finale del corso ITS "Data Manager for Business Intelligence
+Software Developer" (traccia **E — progetto libero**, approvato dal docente).
+
+## Problema e utenti
+
+- **Problema**: i dati sul caldo estremo sono dispersi tra fonti diverse
+  (modelli di rianalisi, stazioni ARPA, dati territoriali) e difficili da
+  leggere per chi non è un esperto.
+- **Per chi**: studenti, amministrazioni locali, giornalisti e cittadini
+  curiosi che vogliono capire come è cambiato il caldo nel loro comune.
+- **Valore**: un unico posto con dati puliti, analisi motivate e un
+  assistente che spiega i risultati citando le fonti.
 
 ## Domande di ricerca
 
 1. Le giornate con temperature estreme sono aumentate nel tempo?
-2. Quali province mostrano i maggiori incrementi?
-3. Esistono differenze territoriali significative?
-4. È possibile identificare aree maggiormente vulnerabili alle ondate di calore?
+2. Quali comuni e province mostrano i cambiamenti maggiori?
+3. Esistono pattern geografici significativi?
+4. Quali fattori territoriali spiegano le differenze tra comuni?
+5. Si possono raggruppare territori climaticamente simili con il Machine Learning?
 
-Queste quattro domande sono il filo conduttore di tutto il progetto: guidano lo
-schema dati ([Modello Dati](data-model.md)), i KPI ([Catalogo KPI](kpi-catalog.md)),
-le query ([Query SQL](sql-queries.md)) e le mappe GIS previste ([Mappe GIS](gis-maps.md)).
+## Componenti
 
-## Stack tecnologico (dichiarato)
+| Componente | Tecnologie |
+|---|---|
+| ETL | Python, pandas, requests, Open-Meteo, ARPA, ISTAT, CORINE, NDVI |
+| Storage | PostgreSQL + PostGIS; snapshot Parquet per l'app |
+| Analisi | scipy, pymannkendall, statsmodels (STL, OLS), libpysal/spreg |
+| Machine Learning | scikit-learn (K-Means, regressori), joblib |
+| Assistente AI | Ollama, ChromaDB, sentence-transformers, agente con tool |
+| Interfaccia | Streamlit, Plotly, Folium; QGIS per le mappe statiche |
+| Qualità | pytest, logging con loguru, configurazione con YAML + `.env` |
 
-- **Python**: pandas, numpy, geopandas, sqlalchemy, plotly, matplotlib
-- **Database**: PostgreSQL + PostGIS
-- **GIS**: QGIS, Folium, Shapely, Pyproj
-- **Dashboard**: Streamlit
-- **Versionamento**: Git/GitHub
-
-Per lo stato reale di implementazione di ciascun pezzo vedi
-[Stato del Progetto](project-status.md) — i documenti README/PROJECT_SUMMARY
-descrivono l'obiettivo finale, non necessariamente ciò che esiste oggi nel
-codice.
-
-## Fonti dati
-
-Vedi [Fonti Dati](data-sources.md) per il dettaglio implementativo di ciascuna
-fonte (Open-Meteo, Copernicus ERA5, ARPA Piemonte, ISTAT, OpenStreetMap).
-
-## Pianificazione
-
-Il piano originale è una roadmap di 3 settimane (vedi `docs/ROADMAP.md`):
-Settimana 1 Setup & Acquisizione, Settimana 2 ETL & Analisi, Settimana 3
-Visualizzazione & Deployment. Stato aggiornato in [Stato del Progetto](project-status.md).
+Architettura in [Architettura](architecture.md), stato in
+[Stato del progetto](project-status.md).

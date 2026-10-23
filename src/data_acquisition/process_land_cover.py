@@ -3,7 +3,7 @@ process_land_cover.py - Calcola % uso del suolo (CORINE Land Cover) per comune.
 
 Popola `municipality_land_cover` (vedi sql/03_land_cover.sql), covariata
 esplicativa mancante per il paper scientifico - vedi
-wiki/pages/paper-scientifico.md.
+paper/PIANO-ARTICOLO.md.
 
 Fonte: CORINE Land Cover 2018 vettoriale (Copernicus Land Monitoring
 Service), scaricato manualmente dall'utente via "Download by area" (decisione

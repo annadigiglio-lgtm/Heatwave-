@@ -4044,3 +4044,65 @@ Log cronologico append-only. Ogni riga: data, azione, pagine toccate.
   Connessione DB confermata (psql, PostgreSQL 16.14). Pagine aggiornate:
   `project-status.md` (punto 3 di "Prossimi passi" segnato fatto/obsoleto,
   nuova sezione in cronologia).
+# 2026-09-04 — riallineamento wiki alla consegna finale ITS
+
+Letto il documento di consegna e recepiti i chiarimenti successivi:
+PostgreSQL/PostGIS è autorizzato, l'applicazione può funzionare interamente in
+locale e non va ridotta la capacità analitica. Aggiunto
+`pages/final-project-plan.md` con piano operativo, matrice di conformità,
+Pipeline K-Means, persistenza `joblib`, chatbot, benchmark dei prompt, test,
+etica e demo. Riscritti `index.md`, `pages/project-overview.md`,
+`pages/architecture.md` e `pages/project-status.md` per rimuovere roadmap e
+claim obsoleti; esteso `pages/testing.md`. Moran's I, ARPA, QGIS, PostGIS e le
+analisi scientifiche sono stati mantenuti.
+
+## Audit tecnico preliminare
+
+Verificati ambiente, dipendenze, PostgreSQL/PostGIS e suite di test. Il test
+`test_frequency_by_year_includes_years_with_zero_events` era rimasto legato al
+vecchio intervallo fisso 2000–2025, mentre la funzione usa correttamente il
+range dinamico introdotto dopo l'estensione dei dati al 2026. Aggiornato il
+fixture con le colonne realmente richieste e un anno intermedio privo di eventi;
+nessuna modifica al calcolo applicativo.
+
+## Pipeline Machine Learning completata
+
+Creato `src/machine_learning/` con Pipeline `StandardScaler` + `KMeans`,
+confronto di `k=2..8`, silhouette score, ordinamento stabile dei cluster,
+salvataggio/caricamento `joblib` e metadati JSON. Addestramento reale su 599
+comuni: scelto `k=3`, silhouette score 0,5389. Le nuove assegnazioni coincidono
+al 100% con il clustering storico. Aggiunti 5 test (suite: 36/36) e la pagina
+Streamlit `09_machine_learning.py`, verificata con AppTest insieme alla Home.
+
+# 2026-10-23 — wiki ridotta alla versione d'esame e pipeline per agenti
+
+Confrontato il progetto con i requisiti del corso (6 competenze: pandas,
+visualizzazione, ML supervisionato, LLM, agente con tool, RAG). Esito: 2
+competenze piene, ML solo non supervisionato, LLM/agente/RAG assenti.
+
+- **Nuove pagine**: `roadmap-esame.md` (fasi F0–F11 con dipendenze e
+  cancelli di qualità), `todo-agenti.md` (task T0.1–T11.1 eseguibili da
+  agenti), `chatbot.md` (specifica di client LLM, 6 tool sul Parquet, RAG
+  ChromaDB, agente Router/Analista/Ricercatore/Revisore, memoria, prompt,
+  benchmark), `etica-e-limiti.md`.
+- **Riscritte e condensate** sullo stato attuale (senza cronologia):
+  `index.md`, `project-overview.md`, `project-status.md`, `architecture.md`,
+  `machine-learning.md`, `data-sources.md`, `etl-pipeline.md`,
+  `data-model.md` (ha assorbito il catalogo KPI e le query SQL),
+  `statistical-analysis.md`, `dashboard.md` (ha assorbito le mappe QGIS),
+  `testing.md`, `concepts.md` (aggiunti i termini ML/LLM/RAG; i numeri fermi
+  a 8 comuni sono stati corretti), `config-reference.md`.
+- **Eliminate**: `final-project-plan.md` (sostituita da roadmap + to-do),
+  `comuni-coperti.md` (guida ai download collaborativi, non serve
+  all'esame), `gis-maps.md`, `kpi-catalog.md`, `sql-queries.md` (assorbite).
+- **Spostata**: `paper-scientifico.md` → `paper/PIANO-ARTICOLO.md`; aggiornati
+  i riferimenti nei commenti di `src/`, `qgis_projects/` e `paper/`.
+- **Decisione**: dashboard e chatbot leggono solo lo snapshot Parquet;
+  PostgreSQL resta per ETL, analisi e training.
+- **Problemi rilevati** (diventati task): pagina 09 legge da PostgreSQL
+  (T1.1), K-Means duplicato (T1.2), `.env.example` mancante (T0.2), lavoro
+  ML non ancora in un commit (T0.1).
+
+Le pagine eliminate già versionate restano nella cronologia git.
+`final-project-plan.md` non era mai stata versionata: il suo contenuto è
+confluito in `roadmap-esame.md` e `todo-agenti.md`.

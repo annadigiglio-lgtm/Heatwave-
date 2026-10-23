@@ -1,5 +1,5 @@
 """
-build_maps.py - Genera i progetti QGIS pianificati (vedi wiki/pages/gis-maps.md)
+build_maps.py - Genera i progetti QGIS pianificati (vedi wiki/pages/dashboard.md)
 
 Esegue con l'interprete Python bundled di QGIS (PyQGIS), non con il venv
 del progetto:

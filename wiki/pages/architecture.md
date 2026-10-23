@@ -1,79 +1,85 @@
 # Architettura
 
-**Sorgenti**: `docs/ARCHITECTURE.md`, struttura reale delle cartelle
+**Sorgenti**: struttura del repository, `config.yaml`, `src/`, `dashboard/`,
+`sql/`. Le parti marcate *(da fare)* sono descritte in
+[Pipeline d'esame](roadmap-esame.md).
 
-## Flusso a livelli
+## Tre livelli
 
-```
-Fonti dati esterne (Open-Meteo, Copernicus ERA5, ARPA, ISTAT, OSM)
-        │
+```text
+1. PRODUZIONE DATI (offline, in locale)
+   Open-Meteo · ARPA · ISTAT · CORINE · NDVI · popolazione
+        │  src/data_acquisition/
         ▼
-  data/raw/              ← src/data_acquisition/download_data.py
-        │
+   pulizia pandas (src/data_processing/clean_data.py)
+        │  src/database/load_to_db.py
         ▼
-  data/processed/        ← src/data_processing/clean_data.py
-        │
+   PostgreSQL + PostGIS  ──►  src/analysis/*  (trend, STL, Moran's I, regressione, ARPA)
+        │                     src/machine_learning/* (K-Means, regressore)  ──► models/*.joblib
         ▼
-  PostgreSQL + PostGIS   ← src/database/load_to_db.py
-        │
-        ├──► sql/02_common_queries.sql  → analisi statistiche
-        ├──► QGIS (qgis_projects/)      → mappe
-        └──► Streamlit (dashboard/)     → dashboard interattiva
+   src/data_processing/refresh_dashboard.py  ──►  data/dashboard_export/*.parquet
+
+2. CONOSCENZA PER IL CHATBOT  (da fare)
+   wiki/pages · paper/manoscritto.md · data/knowledge_base/
+        │  src/chatbot/build_knowledge_base.py
+        ▼
+   ChromaDB  (data/vector_store/)
+
+3. APPLICAZIONE (Streamlit, nessuna connessione al database)
+   dashboard/Home.py + pages/02…09   ◄── Parquet + models/
+   pages/10_assistente_climatico.py  ◄── src/chatbot/  (da fare)
+   pages/11_etica_e_limiti.py        (da fare)
 ```
 
-## Struttura cartelle (reale, luglio 2026)
+**Decisione:** PostgreSQL/PostGIS è lo storage primario e serve a ETL,
+analisi e training. L'app legge solo lo snapshot Parquet e i modelli
+salvati: così la demo funziona anche con il database spento, ed è la stessa
+fonte dati per dashboard e chatbot.
 
-```
-Heatwave Piemonte/
-├── CLAUDE.md                  # schema wiki (nuovo)
-├── wiki/                      # wiki persistente (nuovo)
-├── README.md, PROJECT_SUMMARY.md, SIMPLIFICATION_SUMMARY.md
-├── config.yaml                # configurazione centrale (DB, fonti, soglie)
-├── requirements.txt
-├── docs/                      # documenti di pianificazione dettagliati
-│   ├── ARCHITECTURE.md, DATABASE.md, ETL.md
-│   ├── IMPLEMENTATION_GUIDE.md, ROADMAP.md
-├── sql/
-│   ├── 01_init_database.sql   # DDL completo, implementato
-│   └── 02_common_queries.sql  # query di analisi, implementato
-├── src/
-│   ├── data_acquisition/download_data.py   # implementato
-│   ├── data_processing/clean_data.py       # implementato
-│   ├── database/load_to_db.py              # implementato (parziale, vedi sotto)
-│   ├── utils/{config,database,logger}.py   # implementati
-│   ├── analysis/          # VUOTA — pianificata, non implementata
-│   └── visualization/     # VUOTA — pianificata, non implementata
-├── dashboard/              # VUOTA — Streamlit pianificato, non implementato
-├── tests/                  # VUOTA — nessun test scritto
-├── qgis_projects/          # VUOTA — nessun progetto QGIS creato
-└── data/raw/test_open_meteo_torino.csv   # unico dato reale presente (1 riga di test)
+## Chatbot: componenti *(da fare)*
+
+```text
+domanda utente
+   │
+   ▼
+memory.py  (finestra scorrevole su st.session_state)
+   │
+   ▼
+agent.py ── Router ──┬── Analista dati ── tools.py ── Parquet / models
+                     │
+                     └── Ricercatore ──── rag.py ──── ChromaDB
+   │
+   ▼
+Revisore (controlla numeri e fonti)  ──►  risposta + fonti + traccia tool
+   │
+llm_client.py  (Ollama locale · Anthropic opzionale)
+prompts.py     (system prompt v1 / v2)
 ```
 
-Per il dettaglio di cosa è realmente pronto vs pianificato, vedi
-[Stato del Progetto](project-status.md).
+Dettagli in [Chatbot](chatbot.md).
 
-## Pattern di codice usati
+## Moduli del repository
 
-- **Singleton** per `Config` (`src/utils/config.py`): un'unica istanza globale
-  `config` carica `config.yaml` una volta e la accede via dot-notation
-  (`config.get('database.host')`).
-- **Connection pooling** per il database (`src/utils/database.py`,
-  `DatabaseManager`): engine SQLAlchemy con `pool_pre_ping`, `pool_recycle`,
-  context manager `get_session()`.
-  **Attenzione (trovato il 2026-07-12)**: `execute_query()` usa
-  `engine.connect()` **senza `conn.commit()`** — corretto per le `SELECT`
-  pure, ma se ci esegui una funzione con effetti collaterali (es.
-  `SELECT * FROM identify_heatwaves();`), SQLAlchemy 2.0 fa rollback
-  automatico delle modifiche non committate alla chiusura della
-  connessione, silenziosamente (nessun errore, la funzione "riesce" ma non
-  scrive nulla). `execute_update()` invece chiama `conn.commit()`
-  esplicitamente ed è corretto. Per chiamare funzioni PL/pgSQL con side
-  effect, usare `with db_manager.engine.begin() as conn: conn.execute(...)`
-  (commit automatico a fine blocco se non ci sono eccezioni), non
-  `execute_query()`.
-- **Classi downloader dedicate** per fonte dati (`WeatherDataDownloader`,
-  `CopernicusERA5Downloader`, `ArpaPiemonteDownloader`, `IstatGeodataDownloader`,
-  `OpenStreetMapDownloader`) orchestrate da `ReferenceDataManager` in
-  `download_data.py`.
-- **Logging centralizzato** via `loguru` (`src/utils/logger.py`), configurato
-  da `config.yaml` (livello, formato, file di log).
+| Cartella | Ruolo |
+|---|---|
+| `src/data_acquisition/` | download da API e file (Open-Meteo, ARPA, ISTAT, popolazione, CORINE, NDVI, elevazione) |
+| `src/data_processing/` | `clean_data.py` (DataCleaner), `export_dashboard_data.py`, `refresh_dashboard.py` |
+| `src/database/` | caricamento in PostgreSQL |
+| `src/analysis/` | statistica temporale e spaziale, validazione ARPA |
+| `src/machine_learning/` | Pipeline K-Means; regressore *(da fare)* |
+| `src/chatbot/` | *(da fare)* client LLM, RAG, tool, agente, memoria, prompt |
+| `src/utils/` | `config.py`, `database.py`, `logger.py` |
+| `dashboard/` | app Streamlit multipagina, `components/` condivisi |
+| `models/` | modelli `joblib` + metadati JSON |
+| `data/dashboard_export/` | snapshot Parquet letto dall'app (tracciato in git) |
+| `qgis_projects/` | tre progetti QGIS generati con PyQGIS |
+| `sql/` | schema PostgreSQL/PostGIS |
+| `tests/` | test pytest senza rete né database |
+
+## Principi
+
+- Separare dati, analisi, interfaccia e chiamate al modello.
+- L'LLM non esegue mai SQL o codice: chiama solo funzioni Python in whitelist.
+- Credenziali solo in `.env`, lette da `src/utils/config.py`.
+- Distinguere sempre valori calcolati, risultati ML e testo generato.
+- Database o LLM non disponibili → messaggio comprensibile, mai un traceback.

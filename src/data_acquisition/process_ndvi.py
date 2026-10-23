@@ -3,7 +3,7 @@ process_ndvi.py - Calcola NDVI medio (verde da satellite) per comune.
 
 Popola `municipality_ndvi` (vedi sql/04_ndvi.sql), covariata esplicativa
 complementare a `municipality_land_cover` (CORINE) per il paper scientifico -
-vedi wiki/pages/paper-scientifico.md. Dove CORINE da' classi discrete di uso
+vedi paper/PIANO-ARTICOLO.md. Dove CORINE da' classi discrete di uso
 del suolo, l'NDVI da' una misura continua di "quanto verde" c'e' anche
 dentro una singola classe (es. un urbano con molti alberi vs uno senza).
 
