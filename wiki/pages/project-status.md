@@ -33,13 +33,12 @@ Sequenza di lavoro in [Pipeline d'esame](roadmap-esame.md), attività in
 
 - La pagina 09 interroga PostgreSQL mentre il resto dell'app usa il Parquet → T1.1.
 - K-Means implementato due volte → T1.2.
-- Il lavoro ML (`src/machine_learning/`, `models/`, pagina 09, test) non è
-  ancora in un commit → T0.1.
 
 ## Decisioni confermate
 
 - PostgreSQL/PostGIS è autorizzato dal docente e resta lo storage primario.
 - La demo è locale; il deploy pubblico non è richiesto.
+- Repository d'esame: https://github.com/annadigiglio-lgtm/Heatwave- (pubblico).
 - Le analisi scientifiche (Moran's I, ARPA, STL, QGIS) restano.
 - L'app (dashboard e chatbot) legge solo Parquet e modelli salvati.
 - LLM locale con Ollama; Anthropic come provider opzionale.

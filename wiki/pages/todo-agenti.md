@@ -39,12 +39,13 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F0 — Messa in sicurezza
 
-### T0.1 ⬜ Commit del lavoro ML e branch d'esame
-- **Dipende da:** —  · **Chi:** l'utente, oppure l'agente su richiesta esplicita
-- **Fare:** creare il branch `progetto-finale-its`; aggiungere
-  `src/machine_learning/`, `models/`, `dashboard/pages/09_machine_learning.py`,
-  `tests/test_machine_learning.py`, le modifiche alla wiki; commit.
-- **Verifica:** `git status` pulito; `git ls-files .env` non stampa nulla.
+### T0.1 ✅ Commit del lavoro ML e nuovo repository
+- **Fatto il 2026-10-23:** lavoro ML e wiki in due commit su `main`, push su
+  https://github.com/annadigiglio-lgtm/Heatwave-.git (remote `origin`; il
+  vecchio repository resta come `origine-vecchia`). Si lavora direttamente
+  su `main` del nuovo repository, senza branch separato.
+- `CLAUDE.md` è escluso da `.gitignore` per scelta dell'utente: le regole per
+  gli agenti esistono solo nella copia locale.
 
 ### T0.2 ⬜ Template delle variabili d'ambiente
 - **Dipende da:** —
