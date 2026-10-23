@@ -17,6 +17,7 @@ from src.analysis.spatial_analysis import (
     climate_clustering,
 )
 from src.analysis.heatwave_stats import summary_by_municipality, frequency_by_year
+from src.machine_learning.climate_clustering import build_pipeline, label_mapping
 
 
 class TestMannKendallTrend:
@@ -104,6 +105,26 @@ class TestClimateClustering:
         assert labels.iloc[0] == labels.iloc[1] == labels.iloc[2]
         assert labels.iloc[3] == labels.iloc[4] == labels.iloc[5]
         assert labels.iloc[0] != labels.iloc[3]
+
+    def test_matches_ml_pipeline_with_ordered_labels(self):
+        rng = np.random.RandomState(7)
+        centers = np.array([[8.0, 2.0, 0.0], [13.0, 20.0, 3.0], [17.0, 50.0, 12.0]])
+        values = np.vstack([c + rng.normal(0, [0.5, 2.0, 1.0], (10, 3)) for c in centers])
+        df = pd.DataFrame(
+            values,
+            columns=['temp_mean_avg', 'days_gt_30c_avg', 'days_gt_35c_avg'],
+            index=pd.RangeIndex(100, 130),
+        )
+
+        labels = climate_clustering(df, k=3)
+
+        raw = build_pipeline(3).fit_predict(df)
+        expected = pd.Series(raw, index=df.index).map(label_mapping(df, raw))
+        assert labels.name == 'climate_cluster'
+        assert labels.index.equals(df.index)
+        assert labels.tolist() == expected.tolist()
+        mean_temp = df['temp_mean_avg'].groupby(labels).mean()
+        assert mean_temp.is_monotonic_increasing
 
 
 class TestHeatwaveStatsSummary:

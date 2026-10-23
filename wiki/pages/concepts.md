@@ -61,8 +61,12 @@ lezioni 16–21 del corso. Utile per rispondere alle domande dell'orale.
   risposta usando quei documenti come contesto.
 - **Embedding**: vettore numerico che rappresenta il significato di un
   testo; testi simili hanno vettori vicini. Lo produce una rete neurale
-  pre-addestrata (sentence-transformers).
-- **Vector database (ChromaDB)**: archivio di embedding con ricerca per similarità.
+  pre-addestrata (qui `bge-m3`, servita da Ollama).
+- **Vector database / indice vettoriale**: archivio di embedding con ricerca
+  per similarità. Nel corso si usa ChromaDB; nel progetto c'è un indice numpy
+  con similarità del coseno, perché Windows blocca le librerie di ChromaDB.
+- **Similarità del coseno**: coseno dell'angolo tra due vettori; vale 1
+  quando i due testi hanno lo stesso significato.
 - **Chunking**: suddivisione dei documenti in pezzi (circa 300 parole con
   sovrapposizione) da indicizzare.
 - **Memoria a finestra scorrevole**: si passano all'LLM solo gli ultimi N

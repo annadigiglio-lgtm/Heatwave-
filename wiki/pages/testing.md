@@ -10,12 +10,12 @@ python -m pytest tests --cov=src --cov-report=term-missing
 Regola: i test non usano rete, Ollama né PostgreSQL. Si lavora con
 DataFrame sintetici, cartelle temporanee (`tmp_path`) e LLM finti (`FakeLLM`).
 
-## Suite attuale — 36 test
+## Suite attuale — 37 test
 
 | File | Test | Cosa verifica |
 |---|---:|---|
 | `test_data_cleaning.py` | 15 | `DataCleaner`: duplicati, valori mancanti, range, outlier IQR, flag di qualità, pipeline completa |
-| `test_analysis.py` | 11 | funzioni pure: Mann-Kendall, regressione, haversine, pesi spaziali, Moran's I, K-Means, aggregazioni delle ondate |
+| `test_analysis.py` | 12 | funzioni pure: Mann-Kendall, regressione, haversine, pesi spaziali, Moran's I, K-Means, aggregazioni delle ondate |
 | `test_config.py` | 5 | `Config.get()`, precedenza delle variabili d'ambiente su `config.yaml` |
 | `test_machine_learning.py` | 5 | Pipeline K-Means, silhouette, ordine dei cluster, salvataggio e caricamento `joblib`, feature mancanti |
 

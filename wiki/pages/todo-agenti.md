@@ -47,7 +47,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 - `CLAUDE.md` è escluso da `.gitignore` per scelta dell'utente: le regole per
   gli agenti esistono solo nella copia locale.
 
-### T0.2 ⬜ Template delle variabili d'ambiente
+### T0.2 ✅ Template delle variabili d'ambiente
 - **Dipende da:** —
 - **File:** `.env.example` (nuovo)
 - **Fare:** stessi nomi di `.env` (DB_*, CDS_*, OSM_USER_AGENT, LOG_LEVEL,
@@ -58,7 +58,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F1 — Base solida
 
-### T1.1 ⬜ Pagina ML senza database
+### T1.1 ✅ Pagina ML senza database
 - **Dipende da:** T0.1 · **Wiki:** [Machine Learning](machine-learning.md), [Dashboard](dashboard.md)
 - **File:** `dashboard/components/queries.py`, `dashboard/pages/09_machine_learning.py`
 - **Fare:** aggiungere a `queries.py` una funzione `get_ml_features()` che
@@ -70,8 +70,10 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   predetti coincidono con la colonna `climate_cluster` del parquet.
 - **Verifica:** `python -m pytest tests -q` e un test AppTest della pagina
   (vedi T10.1) senza eccezioni.
+- **Esito (2026-10-23):** `get_ml_features()` in `queries.py`; AppTest senza
+  eccezioni con DB irraggiungibile; cluster coincidenti al 100% (599 comuni).
 
-### T1.2 ⬜ Un solo K-Means (DRY)
+### T1.2 ✅ Un solo K-Means (DRY)
 - **Dipende da:** T0.1
 - **File:** `src/analysis/spatial_analysis.py`, `tests/test_analysis.py`
 - **Fare:** `climate_clustering(df, k)` deve usare `build_pipeline(k)` e il
@@ -82,18 +84,24 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   `KMeans(` fuori da `src/machine_learning/`.
 - **Verifica:** `python -m pytest tests -q`; `grep -rn "KMeans(" src dashboard`
   trova solo `src/machine_learning/climate_clustering.py`.
+- **Esito (2026-10-23):** `climate_clustering()` delega a `build_pipeline` +
+  `label_mapping` (reso pubblico); nuovo test di equivalenza; 100% di
+  coincidenza sui 599 comuni.
 
-### T1.3 ⬜ Configurazione e dipendenze
+### T1.3 ✅ Configurazione e dipendenze
 - **Dipende da:** T0.1
 - **File:** `config.yaml`, `requirements.txt`, `.gitignore`
 - **Fare:** aggiungere la sezione `chatbot:` (vedi [Chatbot](chatbot.md)) e
   `ml:` (`random_seed: 42`, `cv_folds: 5`). Aggiungere a `requirements.txt`
-  `ollama`, `chromadb`, `sentence-transformers`, `anthropic` con versioni
-  fissate (scegliere versioni pubblicate da almeno due settimane e
-  verificarle con `pip install` nel `.venv`). Aggiungere `data/vector_store/`
-  al `.gitignore`.
-- **Verifica:** `.venv\Scripts\python -c "import ollama, chromadb, sentence_transformers"`;
+  `ollama`, `anthropic` con versioni fissate (pubblicate da almeno due
+  settimane). Aggiungere `data/vector_store/` al `.gitignore`.
+- **Verifica:** `.venv\Scripts\python -c "import ollama, anthropic"`;
   `python -m pytest tests -q`.
+- **Esito (2026-10-23):** sezioni `ml` e `chatbot` in `config.yaml`;
+  `ollama==0.6.3`, `anthropic==1.12.1`. ChromaDB 1.5.9 e
+  sentence-transformers 6.1.0 si installano, ma **Smart App Control** (attivo
+  sul PC) blocca `orjson`, `torch` e `regex`. Decisione dell'utente: RAG con
+  embedding Ollama (`bge-m3`) + indice numpy; pacchetti bloccati rimossi.
 
 ## F2 — Machine Learning supervisionato
 
@@ -155,13 +163,15 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F4 — RAG
 
-### T4.1 ⬜ Knowledge base e ChromaDB
-- **Dipende da:** T1.3 · **Corso:** lezione 21-02, 21-03, 21-04
+### T4.1 ⬜ Knowledge base e indice vettoriale
+- **Dipende da:** T1.3, Ollama installato con `ollama pull bge-m3` (solo per
+  il build reale, non per i test) · **Corso:** lezione 21-02, 21-03, 21-04; 19 (`cosine_similarity`)
 - **File:** `src/chatbot/rag.py`, `src/chatbot/build_knowledge_base.py`,
   `tests/chatbot/test_rag.py`
 - **Fare:** [Chatbot §3](chatbot.md).
-  Le funzioni di chunking sono pure e testabili senza ChromaDB; nei test la
-  collezione usa `chromadb.EphemeralClient()` con una embedding function finta.
+  Chunking e `IndiceVettoriale` sono testabili senza Ollama: nei test si
+  passa una embedding function finta e deterministica e si usa `tmp_path`
+  per salvare e ricaricare l'indice.
 - **Verifica:** `python -m src.chatbot.build_knowledge_base` stampa il numero
   di chunk per fonte; `python -m pytest tests/chatbot/test_rag.py -q`.
 

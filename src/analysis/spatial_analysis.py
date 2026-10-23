@@ -20,9 +20,13 @@ from itertools import combinations
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
 from sqlalchemy import text
 
+from src.machine_learning.climate_clustering import (
+    FEATURE_COLUMNS,
+    build_pipeline,
+    label_mapping,
+)
 from src.utils.config import config
 from src.utils.database import db_manager
 from src.utils.logger import get_logger
@@ -129,9 +133,17 @@ def climate_clustering(df: pd.DataFrame, k: int = 3) -> pd.Series:
     K-means clustering dei comuni in zone climatiche, su feature
     standardizzate (temperatura media, giorni >30°C, giorni >35°C).
 
+    Non reimplementa il K-Means: delega alla Pipeline ufficiale di
+    `src/machine_learning/climate_clustering.py` (`build_pipeline(k)`,
+    cioè StandardScaler + KMeans con lo stesso seed e `n_init`) e al suo
+    riordino delle etichette (`label_mapping`). A differenza di
+    `predict_clusters()`, qui il modello viene addestrato ex novo su `df`
+    e non si usa il modello salvato in `models/`: serve, per esempio, a
+    clusterizzare i comuni ARPA nella dashboard.
+
     Le etichette grezze di K-means (0, 1, 2, ...) sono assegnate da sklearn
     in un ordine arbitrario, senza alcun legame con quanto è caldo o freddo
-    il gruppo. Qui vengono rinumerate in base alla temperatura media reale
+    il gruppo. Vengono quindi rinumerate in base alla temperatura media reale
     del gruppo, in ordine crescente: il cluster 0 è sempre il più fresco,
     l'ultimo è sempre il più caldo — una convenzione stabile che rende
     l'etichetta di cluster leggibile di per sé (in tooltip, mappe, tabelle)
@@ -144,18 +156,11 @@ def climate_clustering(df: pd.DataFrame, k: int = 3) -> pd.Series:
     Returns:
         pd.Series: etichetta di cluster per riga (0 = più fresco, k-1 = più caldo)
     """
-    features = df[['temp_mean_avg', 'days_gt_30c_avg', 'days_gt_35c_avg']]
-    standardized = (features - features.mean()) / features.std()
-
-    kmeans = KMeans(n_clusters=k, random_state=RANDOM_SEED, n_init=10)
-    raw_labels = kmeans.fit_predict(standardized)
-
-    raw_series = pd.Series(raw_labels, index=df.index)
-    temp_by_raw_label = df['temp_mean_avg'].groupby(raw_series).mean().sort_values()
-    remap = {raw_label: rank for rank, raw_label in enumerate(temp_by_raw_label.index)}
-
-    labels = raw_series.map(remap)
-    return pd.Series(labels, index=df.index, name='climate_cluster')
+    features = df.loc[:, list(FEATURE_COLUMNS)]
+    raw_labels = build_pipeline(k).fit_predict(features)
+    remap = label_mapping(df, raw_labels)
+    labels = pd.Series(raw_labels, index=df.index).map(remap)
+    return labels.astype(int).rename('climate_cluster')
 
 
 def main():

@@ -106,3 +106,27 @@ dashboard:
   title: "Il riscaldamento del Piemonte: analisi spazio-temporale dei trend termici e delle ondate di calore"
   theme: "light"
   max_upload_size: 200  # MB
+
+# --- MACHINE LEARNING ---
+ml:
+  random_seed: 42
+  cv_folds: 5
+  models_dir: "./models"
+
+# --- CHATBOT (assistente climatico: LLM + agenti + RAG) ---
+# Specifica completa in wiki/pages/chatbot.md
+chatbot:
+  provider: "ollama"            # ollama | anthropic (richiede ANTHROPIC_API_KEY in .env)
+  model: "qwen2.5:7b"           # alternativa leggera: llama3.2
+  anthropic_model: ""           # da impostare solo se provider = anthropic
+  temperature: 0.2
+  max_iterations: 5             # limite del ciclo dell'agente
+  memory_window: 6              # ultimi N scambi passati all'LLM
+  prompt_version: "v2"
+  rag:
+    persist_dir: "./data/vector_store"   # indice: embeddings .npy + chunk .parquet
+    index_name: "heatwave_docs"
+    embedding_model: "bge-m3"             # modello di embedding multilingue servito da Ollama
+    chunk_words: 300
+    overlap_words: 50
+    top_k: 4

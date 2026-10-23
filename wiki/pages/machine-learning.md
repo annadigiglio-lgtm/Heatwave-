@@ -57,11 +57,11 @@ mappa che le riordina per temperatura media (0 = più fresco).
 `models/climate_kmeans_metadata.json`, `output/climate_kmeans_*.csv`.
 Riaddestramento (richiede PostgreSQL): `python -m src.machine_learning.train_climate_model`.
 
-**Da sistemare:**
-- la pagina 09 legge le feature da PostgreSQL, mentre il resto dell'app usa
-  il Parquet (T1.1);
-- `src/analysis/spatial_analysis.py::climate_clustering` è una seconda
-  implementazione fatta a mano dello stesso K-Means (T1.2).
+**Uso nell'app**: la pagina 09 legge le feature da `spatial_analysis.parquet`
+(`queries.get_ml_features()`) e applica il modello salvato, senza database.
+`src/analysis/spatial_analysis.py::climate_clustering()` è un wrapper sulla
+stessa Pipeline (`build_pipeline` + `label_mapping`) e serve per un fit nuovo
+su altri dati, per esempio i comuni ARPA.
 
 ## 2. Regressione della temperatura (da fare, T2.1)
 

@@ -16,8 +16,8 @@ chiama `load_dotenv()`, e le variabili d'ambiente `DB_HOST`, `DB_PORT`,
 | `processing` | soglie 30/35/40 °C, durata minima dell'ondata (3 giorni), periodo 2000–2026, province |
 | `logging` | livello e file (`logs/heatwave_piemonte.log`, loguru) |
 | `visualization`, `dashboard` | palette, porta 8501, titolo |
-| `ml` | *(da aggiungere, T1.3)* `random_seed`, `cv_folds` |
-| `chatbot` | *(da aggiungere, T1.3)* provider, modello, memoria, RAG — vedi [Chatbot](chatbot.md) |
+| `ml` | `random_seed`, `cv_folds`, `models_dir` |
+| `chatbot` | provider, modello, temperatura, `max_iterations`, memoria, versione del prompt, RAG — vedi [Chatbot](chatbot.md) |
 
 ## Variabili d'ambiente
 
@@ -30,4 +30,4 @@ chiama `load_dotenv()`, e le variabili d'ambiente `DB_HOST`, `DB_PORT`,
 | `OLLAMA_HOST` | *(nuova)* indirizzo di Ollama, predefinito `http://localhost:11434` |
 | `ANTHROPIC_API_KEY` | *(nuova, facoltativa)* solo con `chatbot.provider: anthropic` |
 
-Il file `.env.example` con i soli nomi va creato (T0.2).
+Il file `.env.example` elenca le variabili con valori segnaposto.

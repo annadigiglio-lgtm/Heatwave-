@@ -10,7 +10,7 @@ streamlit run dashboard/Home.py
 ```
 
 L'app non apre connessioni al database: legge `data/dashboard_export/`
-(Parquet) e `models/`. Fa eccezione, per ora, la pagina 09 (T1.1).
+(Parquet) e `models/`.
 Dopo un aggiornamento dei dati: `python -m src.data_processing.refresh_dashboard`.
 
 ## Pagine
@@ -25,7 +25,7 @@ Dopo un aggiornamento dei dati: `python -m src.data_processing.refresh_dashboard
 | `06_sintesi_della_ricerca.py` | sintesi divulgativa con citazioni | ✅ |
 | `07_download_dati.py` | export CSV | ✅ |
 | `08_citazioni_e_fonti.py` | bibliografia e fonti dati | ✅ |
-| `09_machine_learning.py` | K-Means: scelta di k, cluster, mappa, limiti | ⚠️ legge dal DB (T1.1); tab regressione/PCA da fare (T2.2) |
+| `09_machine_learning.py` | K-Means: scelta di k, cluster, mappa, limiti | ✅ senza DB; tab regressione/PCA da fare (T2.2) |
 | `10_assistente_climatico.py` | chatbot con agenti e RAG | ⬜ T7.1 |
 | `11_etica_e_limiti.py` | trasparenza, privacy, limiti | ⬜ T9.1 |
 

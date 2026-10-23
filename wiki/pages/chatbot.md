@@ -3,8 +3,9 @@
 **Stato**: da implementare (fasi F3–F8 della [Pipeline d'esame](roadmap-esame.md)).
 **Riferimenti del corso** (cartella `../../../../wiki/`): lezione 13 (API LLM,
 wrapper universale, Streamlit chat), 15 (memoria, personalità, guardrail),
-11–12 (prompt e valutazione), 20 (agenti e tool use), 21 (RAG, ChromaDB,
-chunking, framework multi-agente).
+11–12 (prompt e valutazione), 20 (agenti e tool use), 21 (RAG, embedding,
+chunking, framework multi-agente); 19 (`cosine_similarity` nei sistemi di
+raccomandazione).
 
 ## Scopo
 
@@ -21,12 +22,12 @@ src/chatbot/
 ├── llm_client.py           # chiedi_llm(messaggi) → str ; provider ollama | anthropic ; FakeLLM per i test
 ├── prompts.py              # SYSTEM_PROMPTS = {"v1": ..., "v2": ...}, prompt di router/analista/ricercatore/revisore
 ├── tools.py                # 6 tool dati + registro TOOLS e descrizioni per il prompt
-├── rag.py                  # chunking, indicizzazione ChromaDB, cerca_documenti()
+├── rag.py                  # chunking, embedding con Ollama, indice numpy, cerca_documenti()
 ├── build_knowledge_base.py # python -m src.chatbot.build_knowledge_base
 ├── agent.py                # esegui_agente(), parse_tool_request(), router e revisore
 └── memory.py               # finestra scorrevole + riassunto opzionale
 data/knowledge_base/        # schede curate .md (metodologia, FAQ, glossario, limiti)
-data/vector_store/          # ChromaDB persistente (rigenerabile, non versionato)
+data/vector_store/          # indice: embeddings.npy + chunks.parquet (rigenerabile, non versionato)
 dashboard/pages/10_assistente_climatico.py
 tests/chatbot/              # test con FakeLLM + test_set.csv + benchmark
 ```
@@ -43,8 +44,8 @@ chatbot:
   prompt_version: v2
   rag:
     persist_dir: ./data/vector_store
-    collection: heatwave_docs
-    embedding_model: paraphrase-multilingual-MiniLM-L12-v2
+    index_name: heatwave_docs
+    embedding_model: bge-m3     # embedding multilingue servito da Ollama
     chunk_words: 300
     overlap_words: 50
     top_k: 4
@@ -96,12 +97,30 @@ eseguire solo funzioni presenti lì (come nella lezione 20-03).
   circa 300 parole con 50 di sovrapposizione (lezione 21-03).
 - **Metadati per chunk**: `fonte` (path), `sezione` (titolo), `id` stabile
   (`path#indice`), così la risposta può citare la fonte.
-- **Vector store**: `chromadb.PersistentClient(path=persist_dir)` e
-  `get_or_create_collection` (lezione 21-04) con
-  `SentenceTransformerEmbeddingFunction` multilingue: l'embedding di default
-  di ChromaDB è pensato per l'inglese.
-- **API**: `cerca_documenti(domanda, k=4) -> list[dict(testo, fonte, sezione, distanza)]`.
-- Lo script di build cancella e ricrea la collezione: è idempotente.
+- **Embedding**: `ollama.embed(model="bge-m3", input=[...])`, a blocchi.
+  `bge-m3` è una rete neurale pre-addestrata multilingue, quindi adatta ai
+  testi in italiano. Gli stessi modelli e la stessa funzione servono per
+  indicizzare e per interrogare.
+- **Indice vettoriale**: classe `IndiceVettoriale` scritta da noi con la
+  stessa interfaccia concettuale di ChromaDB (lezione 21-02): `aggiungi()`,
+  `cerca(vettore, k)`, `salva()`, `carica()`. Gli embedding stanno in una
+  matrice numpy normalizzata (`embeddings.npy`), i testi e i metadati in
+  `chunks.parquet`, più un `manifest.json` (modello, data, numero di chunk,
+  hash delle fonti). La similarità si calcola con
+  `sklearn.metrics.pairwise.cosine_similarity` (lezione 19), poi top-k.
+  Qualche centinaio di chunk: una ricerca esatta in numpy richiede pochi
+  millisecondi, quindi non serve un database vettoriale.
+- **Perché non ChromaDB**: sul PC di sviluppo Smart App Control di Windows
+  blocca le librerie compilate di ChromaDB (`orjson`) e di
+  sentence-transformers (`torch`, `regex`). Questa soluzione usa solo
+  librerie già funzionanti ed è più facile da spiegare. All'orale va
+  presentata come scelta motivata: la logica RAG della lezione 21 resta
+  identica, cambia solo dove si salvano i vettori.
+- **API**: `cerca_documenti(domanda, k=4) -> list[dict(testo, fonte, sezione, similarita)]`.
+- Lo script di build ricrea l'indice da zero: è idempotente. Se Ollama non
+  è attivo, si ferma con un messaggio chiaro.
+- Embedding function iniettabile: nei test se ne usa una finta e
+  deterministica (per esempio un bag-of-words), senza Ollama.
 - `data/vector_store/` va in `.gitignore`; il README spiega come ricostruirlo
   (pochi secondi).
 

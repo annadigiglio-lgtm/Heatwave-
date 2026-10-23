@@ -45,6 +45,14 @@ folium==0.20.0
 streamlit==1.58.0
 streamlit-folium==0.27.2
 
+# --- Chatbot: LLM, agenti e RAG (wiki/pages/chatbot.md) ---
+# Embedding del RAG calcolati da Ollama (bge-m3) e indice vettoriale in
+# numpy + scikit-learn: ChromaDB e sentence-transformers sono esclusi perche'
+# Smart App Control di Windows blocca le loro librerie compilate
+# (orjson, torch, regex) - vedi wiki/pages/chatbot.md.
+ollama==0.6.3
+anthropic==1.12.1  # provider facoltativo, chiave solo da .env
+
 # --- Utilities ---
 pyyaml==6.0.3
 python-dotenv==1.2.2

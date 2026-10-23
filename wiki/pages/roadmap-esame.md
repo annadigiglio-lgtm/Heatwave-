@@ -23,7 +23,7 @@ Un'app Streamlit locale che integra **6 competenze su 6** richieste dal corso:
 | 3b | ML non supervisionato | Pipeline K-Means + PCA (già presente, da consolidare) | F1–F2 |
 | 4 | API LLM | `src/chatbot/llm_client.py` (Ollama, Claude opzionale) | F3 |
 | 5 | Agente + almeno 2 tool | `src/chatbot/agent.py` + `tools.py` (6 tool) | F5–F6 |
-| 6 | RAG | `src/chatbot/rag.py` + ChromaDB sulla documentazione | F4 |
+| 6 | RAG | `src/chatbot/rag.py`: embedding Ollama + indice vettoriale numpy | F4 |
 
 Bonus già presenti o previsti: test automatici, documentazione curata.
 
@@ -114,7 +114,8 @@ nuovi verdi.
 - Knowledge base: `wiki/pages/*.md`, `paper/manoscritto.md`,
   `paper/references/README.md`, schede curate in `data/knowledge_base/`.
 - Chunking per sezione Markdown (circa 300 parole, sovrapposizione 50).
-- ChromaDB persistente in `data/vector_store/` con embedding multilingue.
+- Embedding multilingue `bge-m3` calcolati da Ollama; indice vettoriale numpy
+  persistente in `data/vector_store/` (ChromaDB è bloccato da Smart App Control).
 - Funzione `cerca_documenti(domanda, k)` che restituisce testo + fonte.
 
 **Cancello:** script `build_knowledge_base` rieseguibile; 5 domande di

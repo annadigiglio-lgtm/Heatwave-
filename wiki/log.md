@@ -4106,3 +4106,22 @@ competenze piene, ML solo non supervisionato, LLM/agente/RAG assenti.
 Le pagine eliminate già versionate restano nella cronologia git.
 `final-project-plan.md` non era mai stata versionata: il suo contenuto è
 confluito in `roadmap-esame.md` e `todo-agenti.md`.
+
+# 2026-10-23 — F0 e F1 completate (T0.2, T1.1, T1.2, T1.3)
+
+- **T0.2**: creato `.env.example` (variabili DB, CDS, OSM, log, Streamlit,
+  `OLLAMA_HOST`, `ANTHROPIC_API_KEY`), non escluso da git.
+- **T1.1** (subagente): `queries.get_ml_features()` legge
+  `spatial_analysis.parquet`; la pagina 09 non usa più PostgreSQL. AppTest
+  senza eccezioni con DB irraggiungibile; cluster coincidenti al 100%.
+- **T1.2** (subagente, in parallelo): `spatial_analysis.climate_clustering()`
+  delega a `build_pipeline` + `label_mapping` (reso pubblico); nuovo test di
+  equivalenza; 100% di coincidenza su 599 comuni.
+- **T1.3**: sezioni `ml` e `chatbot` in `config.yaml`, `ollama` e `anthropic`
+  in `requirements.txt`, `data/vector_store/` in `.gitignore`. ChromaDB e
+  sentence-transformers si installano ma Smart App Control (attivo,
+  `VerifiedAndReputablePolicyState=1`) blocca le DLL di `orjson`, `torch` e
+  `regex`. Su decisione dell'utente il RAG userà embedding `bge-m3` via
+  Ollama e un indice numpy con `cosine_similarity`; pacchetti bloccati
+  disinstallati, `chatbot.md`, `architecture.md`, `roadmap-esame.md`,
+  `todo-agenti.md`, `concepts.md`, `project-overview.md` riallineate.

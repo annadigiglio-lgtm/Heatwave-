@@ -11,8 +11,8 @@ import streamlit as st
 
 from components import PROJECT_ROOT
 from components.charts import apply_chart_theme
+from components.queries import get_ml_features
 from components.styling import inject_custom_css, render_sidebar_branding
-from src.analysis.spatial_analysis import load_municipality_features
 from src.machine_learning.climate_clustering import load_model, predict_clusters
 
 st.set_page_config(page_title='Machine Learning — Heatwave Piemonte', layout='wide')
@@ -25,28 +25,30 @@ def get_persisted_model():
     return load_model(PROJECT_ROOT / 'models')
 
 
-@st.cache_data(ttl=600)
-def get_model_data() -> pd.DataFrame:
-    return load_municipality_features()
-
-
 st.title('🤖 Machine Learning — cluster climatici')
 st.caption(
     'Una Pipeline scikit-learn raggruppa i comuni con caratteristiche climatiche '
     'simili. Il modello è addestrato separatamente, salvato con joblib e ricaricato '
-    'in questa pagina.'
+    'in questa pagina. Le feature per comune provengono dallo snapshot Parquet '
+    'della dashboard: non serve una connessione al database.'
 )
 
 try:
+    data = get_ml_features().copy()
+except (FileNotFoundError, OSError) as exc:
+    st.error(f'Snapshot della dashboard non disponibile: {exc}')
+    st.info('Eseguire: `python -m src.data_processing.export_dashboard_data`')
+    st.stop()
+
+try:
     pipeline, metadata = get_persisted_model()
-    data = get_model_data().copy()
     data['climate_cluster'] = predict_clusters(data, pipeline, metadata)
 except (FileNotFoundError, ValueError, OSError) as exc:
     st.error(f'Impossibile caricare il modello climatico: {exc}')
     st.info('Eseguire: `python -m src.machine_learning.train_climate_model`')
     st.stop()
 except Exception as exc:
-    st.error(f'Database o modello non disponibile: {exc}')
+    st.error(f'Modello o feature non utilizzabili: {exc}')
     st.stop()
 
 selected_k = int(metadata['selected_k'])
@@ -82,7 +84,7 @@ st.subheader('Come è costruito il modello')
 left, right = st.columns(2)
 with left:
     st.markdown(
-        '1. I KPI vengono aggregati per comune da PostgreSQL/PostGIS.\n'
+        '1. I KPI annuali vengono aggregati per comune (snapshot Parquet della dashboard).\n'
         '2. `StandardScaler` porta le feature sulla stessa scala.\n'
         '3. `KMeans` individua gruppi senza etichette preesistenti.\n'
         '4. Le etichette vengono ordinate dalla temperatura minore alla maggiore.\n'

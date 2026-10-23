@@ -35,7 +35,7 @@ Software Developer" (traccia **E — progetto libero**, approvato dal docente).
 | Storage | PostgreSQL + PostGIS; snapshot Parquet per l'app |
 | Analisi | scipy, pymannkendall, statsmodels (STL, OLS), libpysal/spreg |
 | Machine Learning | scikit-learn (K-Means, regressori), joblib |
-| Assistente AI | Ollama, ChromaDB, sentence-transformers, agente con tool |
+| Assistente AI | Ollama (LLM + embedding bge-m3), RAG con indice numpy, agente con tool |
 | Interfaccia | Streamlit, Plotly, Folium; QGIS per le mappe statiche |
 | Qualità | pytest, logging con loguru, configurazione con YAML + `.env` |
 

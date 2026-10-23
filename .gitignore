@@ -80,3 +80,7 @@ Thumbs.db
 
 # Istruzioni interne per l'assistente AI - non pubbliche
 CLAUDE.md
+
+# Indice vettoriale del RAG del chatbot: rigenerabile con
+# python -m src.chatbot.build_knowledge_base
+data/vector_store/

@@ -290,6 +290,21 @@ def get_spatial_analysis() -> pd.DataFrame:
 
 
 @st.cache_data(ttl=600)
+def get_ml_features() -> pd.DataFrame:
+    """
+    Feature per comune usate dalla Pipeline K-Means della pagina Machine
+    Learning - stesse colonne di
+    `src/analysis/spatial_analysis.py::load_municipality_features()`
+    (municipality_name, lon, lat, temp_mean_avg, days_gt_30c_avg,
+    days_gt_35c_avg), lette da `spatial_analysis.parquet` invece che da
+    PostgreSQL. La colonna `climate_cluster` del parquet viene esclusa:
+    i cluster li ricalcola la pagina con il modello salvato in `models/`.
+    """
+    columns = ['municipality_name', 'lon', 'lat', 'temp_mean_avg', 'days_gt_30c_avg', 'days_gt_35c_avg']
+    return pd.read_parquet(_export_path('spatial_analysis.parquet'), columns=columns)
+
+
+@st.cache_data(ttl=600)
 def get_morans_i_summary() -> pd.DataFrame:
     path = _export_path('morans_i_summary.parquet')
     if not path.exists():

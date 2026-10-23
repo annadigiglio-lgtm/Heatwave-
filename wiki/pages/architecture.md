@@ -23,7 +23,7 @@
    wiki/pages · paper/manoscritto.md · data/knowledge_base/
         │  src/chatbot/build_knowledge_base.py
         ▼
-   ChromaDB  (data/vector_store/)
+   indice vettoriale numpy  (data/vector_store/, embedding bge-m3 via Ollama)
 
 3. APPLICAZIONE (Streamlit, nessuna connessione al database)
    dashboard/Home.py + pages/02…09   ◄── Parquet + models/
@@ -47,7 +47,7 @@ memory.py  (finestra scorrevole su st.session_state)
    ▼
 agent.py ── Router ──┬── Analista dati ── tools.py ── Parquet / models
                      │
-                     └── Ricercatore ──── rag.py ──── ChromaDB
+                     └── Ricercatore ──── rag.py ──── indice vettoriale
    │
    ▼
 Revisore (controlla numeri e fonti)  ──►  risposta + fonti + traccia tool

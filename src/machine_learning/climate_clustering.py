@@ -67,7 +67,7 @@ def evaluate_k_values(df: pd.DataFrame, k_values: Iterable[int] = range(2, 9)) -
     return pd.DataFrame(rows).sort_values('k').reset_index(drop=True)
 
 
-def _label_mapping(df: pd.DataFrame, raw_labels) -> dict[int, int]:
+def label_mapping(df: pd.DataFrame, raw_labels) -> dict[int, int]:
     """Ordina le etichette dal cluster climaticamente più fresco al più caldo."""
     raw = pd.Series(raw_labels, index=df.index)
     temperature_by_cluster = df['temp_mean_avg'].groupby(raw).mean().sort_values()
@@ -86,7 +86,7 @@ def fit_climate_model(df: pd.DataFrame, k: int | None = None) -> tuple[Pipeline,
 
     pipeline = build_pipeline(selected_k)
     raw_labels = pipeline.fit_predict(features)
-    mapping = _label_mapping(df, raw_labels)
+    mapping = label_mapping(df, raw_labels)
     selected_score = float(
         evaluation.loc[evaluation['k'] == selected_k, 'silhouette_score'].iloc[0]
     )

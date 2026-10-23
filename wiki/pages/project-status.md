@@ -15,8 +15,8 @@ Sequenza di lavoro in [Pipeline d'esame](roadmap-esame.md), attività in
 | 5 | Agente con almeno 2 tool | ❌ | → T5.1, T6.1 |
 | 6 | RAG | ❌ | → T4.1, T4.2 |
 | — | Streamlit funzionante | ✅ | `dashboard/Home.py` + 8 pagine |
-| — | README, requirements | ⚠️ | manca `.env.example`, il README cita il deploy pubblico |
-| — | Bonus: test automatici | ✅ | 36 test pytest |
+| — | README, requirements | ⚠️ | `.env.example` e dipendenze del chatbot presenti; il README cita ancora il deploy pubblico |
+| — | Bonus: test automatici | ✅ | 37 test pytest |
 
 ## Già pronto
 
@@ -27,12 +27,12 @@ Sequenza di lavoro in [Pipeline d'esame](roadmap-esame.md), attività in
 | Analisi | trend (Mann-Kendall + regressione), STL, Moran's I, regressione spaziale, validazione ARPA |
 | ML | Pipeline StandardScaler + K-Means, silhouette 0,539 (k=3), `joblib`, pagina 09 |
 | App | dashboard multipagina che legge lo snapshot Parquet, senza database live |
-| Test | 36 test (cleaning, config, analisi, ML) |
+| Test | 37 test (cleaning, config, analisi, ML) |
 
 ## Problemi noti nel codice esistente
 
-- La pagina 09 interroga PostgreSQL mentre il resto dell'app usa il Parquet → T1.1.
-- K-Means implementato due volte → T1.2.
+Nessuno aperto: pagina 09 senza database (T1.1) e K-Means unico (T1.2)
+risolti il 2026-10-23.
 
 ## Decisioni confermate
 
@@ -43,6 +43,14 @@ Sequenza di lavoro in [Pipeline d'esame](roadmap-esame.md), attività in
 - L'app (dashboard e chatbot) legge solo Parquet e modelli salvati.
 - LLM locale con Ollama; Anthropic come provider opzionale.
 - Agente scritto a mano (schema della lezione 20), niente CrewAI/LangChain.
+- RAG con embedding Ollama (`bge-m3`) e indice vettoriale numpy al posto di
+  ChromaDB: Smart App Control di Windows blocca `orjson`, `torch` e `regex`.
+
+## Prerequisiti ancora da preparare (azione dell'utente)
+
+- Installare Ollama (https://ollama.com) e scaricare i modelli:
+  `ollama pull qwen2.5:7b` e `ollama pull bge-m3`. Servono da T4.1 (build
+  dell'indice) e da T6.1/T7.1 in poi per le prove reali; i test usano mock.
 
 ## Fuori dall'ambito d'esame
 
