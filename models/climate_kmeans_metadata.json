@@ -1,0 +1,50 @@
+{
+  "model_type": "StandardScaler + KMeans",
+  "created_at_utc": "2026-09-04T13:56:49.414407+00:00",
+  "scikit_learn_features": [
+    "temp_mean_avg",
+    "days_gt_30c_avg",
+    "days_gt_35c_avg"
+  ],
+  "n_observations": 599,
+  "selected_k": 3,
+  "silhouette_score": 0.538856667798527,
+  "random_seed": 42,
+  "raw_to_ordered_label": {
+    "1": 0,
+    "2": 1,
+    "0": 2
+  },
+  "label_meaning": "0 = cluster con temperatura media minore; valori crescenti = più caldo",
+  "selection_note": "Se k non è specificato, viene scelto il valore con silhouette score massimo; l’interpretazione scientifica va comunque verificata nella dashboard.",
+  "k_evaluation": [
+    {
+      "k": 2,
+      "silhouette_score": 0.5369611095144537
+    },
+    {
+      "k": 3,
+      "silhouette_score": 0.538856667798527
+    },
+    {
+      "k": 4,
+      "silhouette_score": 0.5309477144018947
+    },
+    {
+      "k": 5,
+      "silhouette_score": 0.519502525557289
+    },
+    {
+      "k": 6,
+      "silhouette_score": 0.5021186490982135
+    },
+    {
+      "k": 7,
+      "silhouette_score": 0.47115002547021173
+    },
+    {
+      "k": 8,
+      "silhouette_score": 0.4777606968180465
+    }
+  ]
+}

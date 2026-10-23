@@ -267,4 +267,13 @@ else:
     )
 
 st.divider()
+st.subheader("Machine Learning")
+st.caption(
+    "Come sono stati individuati i regimi climatici? La pagina dedicata mostra "
+    "la Pipeline K-Means salvata con joblib, il confronto tra diversi valori di "
+    "k, il silhouette score e i limiti del modello."
+)
+st.page_link("pages/09_machine_learning.py", label="Apri Machine Learning →")
+
+st.divider()
 st.caption("Progetto portfolio di analisi dati climatici — Data Engineering / Data Science / GIS.")

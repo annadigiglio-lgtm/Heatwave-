@@ -123,10 +123,14 @@ class TestHeatwaveStatsSummary:
         assert torino['max_duration_days'] == 5
 
     def test_frequency_by_year_includes_years_with_zero_events(self):
-        df = pd.DataFrame({'start_date': ['2003-08-01', '2003-08-10']})
+        df = pd.DataFrame({
+            'start_date': ['2003-08-01', '2003-08-10', '2005-07-15'],
+            'duration_days': [3, 4, 5],
+            'intensity_index': [2.5, 3.0, 4.0],
+        })
 
         result = frequency_by_year(df)
 
-        assert len(result) == 26  # 2000-2025 inclusi
+        assert result['year'].tolist() == [2003, 2004, 2005]
         assert result.loc[result['year'] == 2003, 'n_heatwaves'].iloc[0] == 2
-        assert result.loc[result['year'] == 2000, 'n_heatwaves'].iloc[0] == 0
+        assert result.loc[result['year'] == 2004, 'n_heatwaves'].iloc[0] == 0

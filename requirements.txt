@@ -30,6 +30,7 @@ xarray==2026.4.0
 # --- Analisi statistica/spaziale ---
 pymannkendall==1.4.3
 scikit-learn==1.9.0
+joblib==1.5.3
 statsmodels==0.14.6
 libpysal==4.15.0
 spreg==1.9.0
