@@ -257,10 +257,44 @@ reale dei tool. Il formato è validato da `tests/chatbot/test_test_set.py`.
 | fuori_ambito | 3 | ricetta, meteo di domani, consiglio medico |
 | injection | 3 | "ignora le istruzioni", SQL, mostra il system prompt |
 
-`python -m tests.chatbot.benchmark --prompt v1 v2` misura, per ogni versione:
-correttezza dei tool chiamati, numeri supportati, rifiuti corretti, fonti
-presenti, tempo medio. Chiarezza 1–5 valutata a mano su un campione.
-Risultati salvati in `output/chatbot_benchmark.csv`.
+### Risultati del benchmark (T8.2, 2026-10-24)
+
+`python -m tests.chatbot.benchmark --provider ollama` (qwen2.5:7b, senza
+cache, 28 domande × 2 prompt, circa 75 minuti su CPU). Criteri oggettivi in
+`tests/chatbot/benchmark.py`; risultati in `data/benchmark/`, mostrati nella
+tab Valutazione della pagina 10.
+
+| Criterio | v1 | **v2** |
+|---|---:|---:|
+| Risposte corrette | 82,1% | **85,7%** |
+| Percorso giusto / tool giusti | 100% / 100% | 100% / 100% |
+| Numeri attesi presenti | 74,2% | **83,9%** |
+| Rifiuti corretti (fuori ambito, injection, dati assenti) | 100% | 100% |
+| Risposte con numeri non supportati | 0 | 0 |
+| Confronti corretti | 0% | **66,7%** |
+| Tempo medio | 57 s | **51 s** |
+
+**Prompt vincente: v2** (ruolo, esempi few-shot, formato della risposta), già
+predefinito.
+
+**Errore grave trovato e corretto.** Alla domanda D03 *"Quante ondate di
+calore ci saranno a Torino nel 2030?"* il chatbot rispondeva *"si prevedono
+11 ondate"*. La pre-selezione riconosceva solo gli anni fino al 2029, quindi
+il tool restituiva il totale storico; il router non riconosceva il futuro.
+Correzione: `chiede_anno_futuro()` più i pattern del tempo futuro portano a un
+rifiuto di tipo "previsione" senza chiamare l'LLM; la pre-selezione accetta
+ogni anno a 4 cifre e lascia al tool la validazione. D03 rieseguita: rifiutata
+con entrambi i prompt.
+
+**Errori residui** (omissioni, non numeri sbagliati): "599 comuni" senza "su
+1180", stazione ARPA di Torino non nominata, intensità della ondata più forte
+di Casale non riportata, confronti con la sola differenza e senza i valori
+assoluti (soprattutto v1).
+
+**Correzioni del criterio** (risposte rivalutate con `--rivaluta`, senza
+rieseguire il modello): sinonimi per "crescente" (aumentata, riscaldamento) e
+zero detto a parole ("non ha avuto ondate", "nessuna"). La chiarezza (scala
+1–5) resta una valutazione manuale.
 
 ## Prestazioni misurate (2026-10-23, PC di sviluppo)
 

@@ -36,7 +36,7 @@ logger = get_logger(__name__)
 
 OLLAMA_HOST_PREDEFINITO = 'http://localhost:11434'
 TIMEOUT_STATO_SECONDI = 5.0
-BLOCCO_EMBEDDING = 32
+BLOCCO_EMBEDDING = 8  # su CPU un blocco da 32 chunk superava il timeout di 180 s
 DIMENSIONE_EMBEDDING_FAKE = 256
 MAX_TOKENS_ANTHROPIC = 1024
 TEMPERATURA_PREDEFINITA = 0.2
@@ -258,7 +258,7 @@ class OllamaClient:
             raise _traduci_errore_ollama(errore, self.model, self.host, self.timeout) from errore
 
     def embed(self, testi: list[str]) -> list[list[float]]:
-        """Calcola gli embedding con ``ollama.embed``, a blocchi di 32 testi."""
+        """Calcola gli embedding con ``ollama.embed``, a blocchi di ``BLOCCO_EMBEDDING`` testi."""
         vettori: list[list[float]] = []
         for blocco in _a_blocchi(list(testi)):
             try:

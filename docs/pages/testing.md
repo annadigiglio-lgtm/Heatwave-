@@ -12,7 +12,7 @@ DataFrame sintetici, cartelle temporanee (`tmp_path`), LLM finti (`FakeLLM`)
 e mock degli SDK. `tests/conftest.py` disattiva per tutta la suite la cache
 su disco delle risposte del chatbot.
 
-## Suite attuale — 237 test (2026-10-24)
+## Suite attuale — 243 test (2026-10-24)
 
 | File | Test | Cosa verifica |
 |---|---:|---|
@@ -25,10 +25,10 @@ su disco delle risposte del chatbot.
 | `chatbot/test_llm_client.py` | 44 | Ollama (timeout, server spento, modello mancante), Gemini (ruoli, streaming, quota giornaliera, errori), Anthropic, riserva automatica, `FakeLLM`, `stato_llm` |
 | `chatbot/test_tools.py` | 17 | 6 tool, comune inesistente con suggerimenti, anni non validi, output JSON, whitelist |
 | `chatbot/test_rag.py` | 21 | chunking, indice numpy salva/carica, retrieval, esclusioni del corpus, controllo sull'indice reale (saltato se manca) |
-| `chatbot/test_agent.py` | 83 | router, parser TOOL/PARAMS, ciclo dell'agente, `max_iterations`, rifiuti e injection, memoria, Revisore, streaming, pre-selezione del tool, system prompt comune, avviso di riserva |
+| `chatbot/test_agent.py` | 87 | router (anche domande sul futuro), parser TOOL/PARAMS, ciclo dell'agente, `max_iterations`, rifiuti e injection, memoria, Revisore, streaming, pre-selezione del tool, system prompt comune, avviso di riserva |
 | `chatbot/test_cache_risposte.py` | 9 | cache delle risposte: hit/miss, chiave, invalidazione, rifiuti non salvati |
 | `chatbot/test_test_set.py` | 10 | formato e coerenza di `test_set.csv` |
-| `chatbot/test_benchmark.py` | 5 | criteri del benchmark (numeri, tool alternativi, rifiuti, riepilogo) |
+| `chatbot/test_benchmark.py` | 7 | criteri del benchmark (numeri, sinonimi, tool alternativi, rifiuti, riepilogo) |
 
 Un bug reale trovato grazie ai test: `detect_outliers` declassava righe
 già "non valide" a "sospette" (vedi [ETL](etl-pipeline.md)).

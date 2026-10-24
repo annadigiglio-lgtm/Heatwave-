@@ -34,6 +34,7 @@ import csv
 import re
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -58,6 +59,14 @@ TOLLERANZA = 0.006           # 0,45 e 0,451 coincidono; arrotondamenti dei tool 
 TOOL_ALTERNATIVI = {'compare_locations': {'get_heatwave_summary', 'get_temperature_trend'}}
 
 _RE_NUMERO = re.compile(r'[-−]?\d+(?:[.,]\d+)?')
+
+# Modi equivalenti di dire lo stesso valore (la risposta è libera, il dato no).
+SINONIMI = {
+    'crescente': [r'crescent', r'\baument', r'\bcresc', r'\bin salita\b', r'\briscaldament'],
+    'alpino': [r'\balpin'],
+}
+ZERO_A_PAROLE = [r'\bnessun', r'\bnon (sono|ci sono|si sono|risultano|e stata|sono state) ',
+                 r'\bnon (ha|hanno) (avuto|registrato)\b', r'\bzero\b']
 
 
 # ---------------------------------------------------------------------------
@@ -84,11 +93,17 @@ def valore_presente(valore: str, testo: str) -> bool:
     valore = valore.strip()
     if not valore:
         return True
+    testo_norm = normalizza_nome(testo or '')
     if _e_numero(valore):
         atteso = float(valore.replace('−', '-').replace(',', '.'))
+        if atteso == 0 and any(re.search(p, testo_norm) for p in ZERO_A_PAROLE):
+            return True
         return any(abs(n - atteso) <= TOLLERANZA or abs(abs(n) - abs(atteso)) <= TOLLERANZA
                    for n in numeri_nel_testo(testo))
-    return normalizza_nome(valore) in normalizza_nome(testo or '')
+    chiave = normalizza_nome(valore)
+    if chiave in testo_norm:
+        return True
+    return any(re.search(p, testo_norm) for p in SINONIMI.get(chiave, []))
 
 
 def tool_corretti(attesi: set[str], chiamati: list[str]) -> bool:
@@ -117,7 +132,9 @@ def valuta(riga: dict, risposta) -> dict:
     if categoria in ('fuori_ambito', 'injection'):
         rifiuto_ok = risposta.percorso == 'fuori_ambito' and risposta.chiamate_llm == 0
     elif deve_rifiutare:
-        rifiuto_ok = errore_tool and supportata
+        # Dato assente: errore del tool senza numeri inventati, oppure rifiuto del router.
+        rifiuto_ok = (errore_tool and supportata) or (
+            risposta.percorso == 'fuori_ambito' and risposta.chiamate_llm == 0)
     else:
         rifiuto_ok = True
 
@@ -134,8 +151,33 @@ def valuta(riga: dict, risposta) -> dict:
     return {
         'percorso_ok': percorso_ok, 'tool_ok': tool_ok, 'valori_trovati': trovati,
         'valori_totali': len(valori), 'fonti_ok': fonti_ok, 'rifiuto_ok': rifiuto_ok,
-        'supportata': supportata, 'corretta': bool(corretta),
+        'supportata': supportata, 'errore_tool': errore_tool, 'corretta': bool(corretta),
     }
+
+
+def rivaluta(dettaglio: pd.DataFrame, path: Path = TEST_SET) -> pd.DataFrame:
+    """Ricalcola i criteri dalle risposte salvate (stesso modello, criteri aggiornati)."""
+    attese = {r['id']: r for r in leggi_test_set(path)}
+    nuove = []
+    for _, riga in dettaglio.iterrows():
+        riga = riga.to_dict()
+        if riga.get('errore') and str(riga['errore']) != 'nan' or riga['id'] not in attese:
+            nuove.append(riga)
+            continue
+        tool = [t for t in str(riga.get('tool') or '').split(';') if t and t != 'nan']
+        errore_tool = riga.get('errore_tool')
+        if errore_tool is None or str(errore_tool) == 'nan':
+            errore_tool = bool(riga.get('rifiuto_ok'))  # righe vecchie: esito già calcolato
+        finta = SimpleNamespace(
+            testo=str(riga.get('risposta') or ''), percorso=riga['percorso'],
+            chiamate_llm=int(riga.get('chiamate_llm') or 0),
+            tool_chiamati=[{'nome': n, 'risultato': {'errore': 'x'} if errore_tool else {}}
+                           for n in tool],
+            fonti=[{}] if bool(riga.get('fonti_ok')) else [],
+            avvisi=[a for a in str(riga.get('avvisi') or '').split(' | ') if a and a != 'nan'])
+        riga.update(valuta(attese[riga['id']], finta))
+        nuove.append(riga)
+    return pd.DataFrame(nuove)
 
 
 # ---------------------------------------------------------------------------
@@ -184,6 +226,7 @@ def esegui_benchmark(versioni: list[str], provider: str | None = None, solo: lis
                 'tool': ';'.join(t['nome'] for t in risposta.tool_chiamati),
                 'chiamate_llm': risposta.chiamate_llm, 'durata_s': risposta.durata_s,
                 'avvisi': ' | '.join(risposta.avvisi), 'risposta': risposta.testo,
+                'fonti': ';'.join(f.get('fonte', '') for f in risposta.fonti),
                 'errore': '',
             })
             if risposta.chiamate_llm:
@@ -228,9 +271,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--provider', default=None, help='ollama | gemini | anthropic (default: config)')
     parser.add_argument('--solo', nargs='*', default=None, help='solo questi id del test set')
     parser.add_argument('--pausa', type=float, default=PAUSA_SECONDI)
+    parser.add_argument('--aggiorna', action='store_true',
+                        help='sostituisce solo le righe rieseguite nel CSV esistente')
+    parser.add_argument('--rivaluta', action='store_true',
+                        help='non interroga il modello: ricalcola i criteri dalle risposte salvate')
     argomenti = parser.parse_args(argv)
 
-    dettaglio = esegui_benchmark(argomenti.prompt, argomenti.provider, argomenti.solo, argomenti.pausa)
+    if argomenti.rivaluta:
+        dettaglio = rivaluta(pd.read_csv(FILE_DETTAGLIO))
+    else:
+        dettaglio = esegui_benchmark(argomenti.prompt, argomenti.provider, argomenti.solo,
+                                     argomenti.pausa)
+        if argomenti.aggiorna and FILE_DETTAGLIO.exists():
+            vecchio = pd.read_csv(FILE_DETTAGLIO)
+            chiavi = set(zip(dettaglio['versione'], dettaglio['id']))
+            tenute = vecchio[[(v, i) not in chiavi for v, i in zip(vecchio['versione'], vecchio['id'])]]
+            dettaglio = pd.concat([tenute, dettaglio], ignore_index=True).sort_values(
+                ['versione', 'id'], kind='stable')
     CARTELLA_RISULTATI.mkdir(parents=True, exist_ok=True)
     dettaglio.to_csv(FILE_DETTAGLIO, index=False, encoding='utf-8')
     sintesi = riepilogo(dettaglio)

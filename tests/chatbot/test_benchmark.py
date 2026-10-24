@@ -82,3 +82,20 @@ def test_riepilogo_percentuali():
     sintesi = riepilogo(dettaglio).iloc[0]
     assert sintesi['corrette_pct'] == 50.0 and sintesi['rifiuti_ok_pct'] == 0.0
     assert sintesi['valori_trovati_pct'] == 100.0 and sintesi['durata_media_s'] == 1.0
+
+
+def test_sinonimi_e_zero_a_parole():
+    assert valore_presente('crescente', 'la temperatura è aumentata di 0,45 °C')
+    assert valore_presente('0', 'Tra il 2000 e oggi non sono state registrate ondate')
+    assert valore_presente('0', 'nessuna ondata di calore')
+    assert valore_presente('0', 'Ciriè non ha avuto ondate di calore')
+    assert valore_presente('crescente', 'trend di riscaldamento significativo')
+    assert valore_presente('alpino', 'Sestriere è nel cluster delle zone alpine')
+    assert not valore_presente('crescente', 'la temperatura è diminuita')
+
+
+def test_dato_assente_rifiutato_dal_router():
+    esito = valuta(_riga(categoria='dato_assente', percorso_atteso='fuori_ambito', deve_rifiutare='si'),
+                   _risposta('Non posso fare previsioni.', percorso='fuori_ambito', chiamate=0))
+    assert esito['corretta']
+

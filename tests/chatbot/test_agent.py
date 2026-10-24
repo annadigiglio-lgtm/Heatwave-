@@ -735,3 +735,19 @@ def test_avviso_del_cambio_al_modello_di_riserva():
     risposta = esegui_agente('Ciao, come stai?', client=client)
     assert any('riserva' in a for a in risposta.avvisi)
 
+
+@pytest.mark.parametrize('domanda', [
+    'Quante ondate di calore ci saranno a Torino nel 2030?',
+    'Che temperatura farà ad Alessandria nel 2050?',
+    'Prevedi il caldo del prossimo anno a Cuneo',
+])
+def test_domande_sul_futuro_rifiutate_senza_llm(domanda):
+    llm = FakeLLM(['non dovrebbe essere chiamato'])
+    risposta = esegui_agente(domanda, client=llm)
+    assert risposta.percorso == 'fuori_ambito' and llm.chiamate == []
+    assert 'previsioni' in risposta.testo
+
+
+def test_anni_passati_restano_domande_sui_dati():
+    assert instrada('Quante ondate di calore ci sono state a Novara nel 2003?') == 'dati'
+

@@ -30,9 +30,9 @@ Bonus già presenti o previsti: test automatici, documentazione curata.
 ## Schema della pipeline (stato attuale)
 
 <!-- PIPELINE:START -->
-_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 15:04: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
+_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 15:50: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
 
-**Avanzamento:** 15/18 task obbligatori (83%) `████████░░`
+**Avanzamento:** 16/18 task obbligatori (88%) `█████████░`
 
 Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa · ⛔ bloccata
 
@@ -49,9 +49,9 @@ Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa
  │                             │
  │                          ✅ F7  Pagina chat
  │                             │
- │                          🔄 F8  Valutazione
+ │                          ✅ F8  Valutazione
  └──────────────┬──────────────┘
-             ⬜ F10 Qualità
+             ▶️ F10 Qualità
                 │
              ⬜ F11 Consegna e demo
 ```
@@ -67,8 +67,8 @@ Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa
 | F5 Tool dati controllati | ✅ | T5.1 ✅ |
 | F6 Agente | ✅ | T6.1 ✅ |
 | F7 Pagina Streamlit "Assistente climatico" | ✅ | T7.1 ✅ |
-| F8 Valutazione del chatbot | 🔄 | T8.1 ✅ · T8.2 🔄 |
-| F10 Qualità | ⬜ | T10.1 ⬜ · T10.2 ✅ *(facolt.)* |
+| F8 Valutazione del chatbot | ✅ | T8.1 ✅ · T8.2 ✅ |
+| F10 Qualità | ▶️ | T10.1 ⬜ · T10.2 ✅ *(facolt.)* |
 | F11 Consegna e demo | ⬜ | T11.1 ⬜ |
 
 **Task pronti da avviare** (dipendenze tutte ✅, eseguibili in parallelo):

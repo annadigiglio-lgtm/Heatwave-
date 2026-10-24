@@ -168,7 +168,18 @@ _PATTERN_PREVISIONE = [
     r'\b(prossima|prossime) (settimana|settimane|giorni|estate)\b', r'\bprossimi giorni\b',
     r'\bnei prossimi\b', r'\bche tempo (fa|fara)\b', r'\bprevision\w* (del tempo|meteo)\b',
     r'\bmeteo di (oggi|domani)\b', r'\bpiovera\b', r'\bnevichera\b', r'\bfara caldo\b',
+    # Tempo futuro: il progetto descrive solo il passato osservato (trovato dal benchmark, D03).
+    r'\bci saranno\b', r'\bci sara\b', r'\bsaranno\b', r'\bprevedi', r'\bprevision',
+    r'\bin futuro\b', r'\bnel futuro\b', r'\b(fra|tra) \d+ anni\b',
 ]
+
+ULTIMO_ANNO_DATI = 2026
+_RE_ANNO_QUALSIASI = re.compile(r'\b((?:19|20)\d{2})\b')
+
+
+def chiede_anno_futuro(domanda: str) -> bool:
+    """Vero se la domanda nomina un anno successivo agli ultimi dati (es. 2030)."""
+    return any(int(a) > ULTIMO_ANNO_DATI for a in _RE_ANNO_QUALSIASI.findall(domanda))
 
 _PATTERN_SANITARIO = [
     r'\bmedicin', r'\bfarmac', r'\bsintom', r'\bmedico\b', r'\bcolpo di calore\b', r'\bmalore\b',
@@ -270,6 +281,8 @@ def _classifica_per_regole(domanda: str) -> tuple[str | None, str | None]:
     if rileva_injection(domanda):
         return 'fuori_ambito', 'injection'
     testo = _testo_per_regole(domanda)
+    if chiede_anno_futuro(domanda):
+        return 'fuori_ambito', 'previsione'
     for motivo, pattern in (('previsione', _PATTERN_PREVISIONE),
                             ('sanitario', _PATTERN_SANITARIO),
                             ('generico', _PATTERN_GENERICO)):
@@ -600,7 +613,7 @@ _PATTERN_COPERTURA = [r'\bcopertura\b', r'\bstazion', r'\barpa\b', r'\bche dati\
 _PATTERN_TREND = [r'\btrend\b', r'\btemperatur', r'\briscald', r'\bcambiat', r'\bcald',
                   r'\bfredd', r'\bgradi\b']
 _PATTERN_REGIONALE = [r'\bpiemonte\b', r'\bregion', r'\bprovince\b', r'\bquadro\b']
-_RE_ANNO = re.compile(r'\b(20[0-2]\d)\b')
+_RE_ANNO = re.compile(r'\b((?:19|20)\d{2})\b')  # ogni anno a 4 cifre: il tool valida l'intervallo
 
 
 def _preselezione_attiva() -> bool:

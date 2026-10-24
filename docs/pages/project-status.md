@@ -16,7 +16,7 @@ Sequenza di lavoro in [Pipeline d'esame](roadmap-esame.md), attività in
 | 6 | RAG | ✅ | `src/chatbot/rag.py`: embedding bge-m3 + indice numpy, 4 schede curate, cancello 6/6 (T4.1, T4.2) |
 | — | Streamlit funzionante | ✅ | `dashboard/Home.py` + 10 pagine (09 ML, 10 Assistente, 11 Etica) |
 | — | README, requirements | ⚠️ | `.env.example` e dipendenze del chatbot presenti; il README cita ancora il deploy pubblico |
-| — | Bonus: test automatici | ✅ | 197 test pytest (dati, analisi, ML, chatbot, smoke delle pagine) |
+| — | Bonus: test automatici | ✅ | 243 test pytest + benchmark del chatbot (v2: 85,7% corrette) |
 
 ## Già pronto
 

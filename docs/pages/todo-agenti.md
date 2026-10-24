@@ -249,7 +249,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 - **Fare:** 20+ righe come in [Chatbot §8](chatbot.md).
   Le risposte attese si ricavano chiamando direttamente i tool.
 
-### T8.2 🔄 Benchmark prompt v1 vs v2
+### T8.2 ✅ Benchmark prompt v1 vs v2
 - **Dipende da:** T6.1, T8.1 · **Corso:** lezione 12
 - **File:** `tests/chatbot/benchmark.py`, `output/chatbot_benchmark.csv`,
   tab "Valutazione" in pagina 10

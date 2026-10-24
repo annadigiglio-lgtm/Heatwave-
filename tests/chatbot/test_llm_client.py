@@ -129,7 +129,9 @@ def test_ollama_embed_a_blocchi():
 
     vettori = client.embed([f't{i}' for i in range(70)])
     assert len(vettori) == 70
-    assert [len(c.kwargs['input']) for c in finto.embed.call_args_list] == [32, 32, 6]
+    blocco = llm_client.BLOCCO_EMBEDDING
+    attesi = [blocco] * (70 // blocco) + ([70 % blocco] if 70 % blocco else [])
+    assert [len(c.kwargs['input']) for c in finto.embed.call_args_list] == attesi
     assert finto.embed.call_args.kwargs['model'] == 'bge-m3'
     assert all(isinstance(x, float) for x in vettori[0])
 

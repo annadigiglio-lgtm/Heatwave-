@@ -4245,3 +4245,14 @@ README, CLAUDE.md); i link alle lezioni del corso restano validi. Pagine
 aggiornate: index, architecture (niente più "da fare"), chatbot (stato),
 testing (237 test per file). Indice RAG da ricostruire dopo il benchmark in
 corso.
+
+# 2026-10-24 — T8.2 chiuso: benchmark del chatbot
+
+Benchmark su Ollama qwen2.5:7b (28 domande × v1/v2, circa 75 minuti, priorità
+bassa). Trovato un errore grave: D03 "ci saranno nel 2030" riceveva una
+previsione inventata. Corretti router (anno futuro e verbi al futuro portano
+al rifiuto "previsione") e pre-selezione (ogni anno a 4 cifre); test set D03 →
+`fuori_ambito`. Criteri del benchmark: sinonimi e zero a parole, opzioni
+`--rivaluta` e `--aggiorna`. Risultato finale: v2 85,7% corrette (v1 82,1%),
+100% rifiuti corretti, 0 numeri inventati, 51 s medi; vince v2. Indice RAG
+ricostruito con i percorsi `docs/pages`. 243 test.
