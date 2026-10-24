@@ -305,6 +305,31 @@ def get_ml_features() -> pd.DataFrame:
 
 
 @st.cache_data(ttl=600)
+def get_temperature_regression_residuals() -> pd.DataFrame:
+    """
+    Residui fuori campione del regressore della temperatura media
+    (`cross_val_predict` con GroupKFold per provincia), scritti da
+    `python -m src.machine_learning.train_temperature_model`. Colonne:
+    municipality_name, province_name, lon, lat, osservato, predetto,
+    residuo = osservato - predetto. Solleva FileNotFoundError se il file manca.
+    """
+    return pd.read_parquet(_export_path('temperature_regression_residuals.parquet'))
+
+
+@st.cache_data(ttl=600)
+def get_temperature_regression_metadata() -> dict:
+    """
+    Metadati JSON del regressore (`models/temperature_regressor_metadata.json`):
+    metriche di tutti i modelli x set di feature x schema di CV, importanza
+    per permutazione, parametri scelti e note metodologiche. Solleva
+    FileNotFoundError se il file manca.
+    """
+    path = Path(PROJECT_ROOT) / 'models' / 'temperature_regressor_metadata.json'
+    with open(path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+@st.cache_data(ttl=600)
 def get_morans_i_summary() -> pd.DataFrame:
     path = _export_path('morans_i_summary.parquet')
     if not path.exists():

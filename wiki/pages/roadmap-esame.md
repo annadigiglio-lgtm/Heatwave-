@@ -27,39 +27,55 @@ Un'app Streamlit locale che integra **6 competenze su 6** richieste dal corso:
 
 Bonus già presenti o previsti: test automatici, documentazione curata.
 
-## Schema della pipeline
+## Schema della pipeline (stato attuale)
+
+<!-- PIPELINE:START -->
+_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-23 11:52: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
+
+**Avanzamento:** 13/18 task obbligatori (72%) `███████░░░`
+
+Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa · ⛔ bloccata
 
 ```text
-F0 Messa in sicurezza
+✅ F0  Messa in sicurezza
  │
- ▼
-F1 Base solida (dati di serving unici, DRY, avvio locale)
- │
- ├──────────────┬──────────────────────────────┐
- ▼              ▼                              ▼
-F2 ML           F3 Client LLM                  F9 Etica e limiti (testi)
-supervisionato   │
- │               ├──────────────┐
- │               ▼              ▼
- │              F4 RAG         F5 Tool dati
- │               │              │
- │               └──────┬───────┘
- │                      ▼
- │                     F6 Agente multi-ruolo + memoria + prompt
- │                      │
- │                      ▼
- │                     F7 Pagina Streamlit "Assistente climatico"
- │                      │
- │                      ▼
- │                     F8 Valutazione (test set + benchmark A/B)
- │                      │
- └──────────┬───────────┘
-            ▼
-F10 Qualità (test, lint, README)  ← gira anche in continuo dopo ogni fase
-            │
-            ▼
-F11 Consegna e demo
+✅ F1  Base solida
+ ├──────────────────────┬──────────────────────────┐
+✅ F2  ML supervis.   ✅ F3  Client LLM         ✅ F9  Etica e limiti
+ │                      ├─────────────┐
+ │                   ✅ F4 RAG    ✅ F5 Tool dati
+ │                      └──────┬──────┘
+ │                          🔄 F6  Agente
+ │                             │
+ │                          ⬜ F7  Pagina chat
+ │                             │
+ │                          🔄 F8  Valutazione
+ └──────────────┬──────────────┘
+             ⬜ F10 Qualità
+                │
+             ⬜ F11 Consegna e demo
 ```
+
+| Fase | Stato | Task |
+|---|:---:|---|
+| F0 Messa in sicurezza | ✅ | T0.1 ✅ · T0.2 ✅ |
+| F1 Base solida | ✅ | T1.1 ✅ · T1.2 ✅ · T1.3 ✅ |
+| F2 Machine Learning supervisionato (requisito 3) | ✅ | T2.1 ✅ · T2.2 ✅ · T2.3 ⬜ *(facolt.)* |
+| F3 Client LLM | ✅ | T3.1 ✅ |
+| F9 Etica, privacy e limiti | ✅ | T9.1 ✅ |
+| F4 RAG sulla documentazione | ✅ | T4.1 ✅ · T4.2 ✅ |
+| F5 Tool dati controllati | ✅ | T5.1 ✅ |
+| F6 Agente | 🔄 | T6.1 🔄 |
+| F7 Pagina Streamlit "Assistente climatico" | ⬜ | T7.1 ⬜ |
+| F8 Valutazione del chatbot | 🔄 | T8.1 ✅ · T8.2 ⬜ |
+| F10 Qualità | ⬜ | T10.1 ⬜ · T10.2 ⬜ *(facolt.)* |
+| F11 Consegna e demo | ⬜ | T11.1 ⬜ |
+
+**Task pronti da avviare** (dipendenze tutte ✅, eseguibili in parallelo):
+
+- T2.3 — (Facoltativo) Modello del bias Open-Meteo vs ARPA
+- T10.2 — (Facoltativo) Pulizia dei documenti storici
+<!-- PIPELINE:END -->
 
 Le fasi sullo stesso livello sono **indipendenti** e possono essere
 assegnate ad agenti diversi in parallelo (F2 ∥ F3 ∥ F9, poi F4 ∥ F5).

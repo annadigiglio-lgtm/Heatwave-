@@ -25,9 +25,9 @@ Dopo un aggiornamento dei dati: `python -m src.data_processing.refresh_dashboard
 | `06_sintesi_della_ricerca.py` | sintesi divulgativa con citazioni | ✅ |
 | `07_download_dati.py` | export CSV | ✅ |
 | `08_citazioni_e_fonti.py` | bibliografia e fonti dati | ✅ |
-| `09_machine_learning.py` | K-Means: scelta di k, cluster, mappa, limiti | ✅ senza DB; tab regressione/PCA da fare (T2.2) |
+| `09_machine_learning.py` | tab Clustering (silhouette, cluster, mappa, PCA 2D: PC1 85%, PC2 14%), Regressione (metriche 3 modelli × KFold/GroupKFold, importanza feature, predetto vs osservato, mappa residui), Limiti | ✅ senza DB |
 | `10_assistente_climatico.py` | chatbot con agenti e RAG | ⬜ T7.1 |
-| `11_etica_e_limiti.py` | trasparenza, privacy, limiti | ⬜ T9.1 |
+| `11_etica_e_limiti.py` | cosa è / non è, limiti di dati e modelli, privacy del chatbot, AI Act e GDPR | ✅ |
 
 Percorso consigliato per la demo:
 problema (Home) → dati (02–05) → ML (09) → assistente (10) → etica (11).

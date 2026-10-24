@@ -4125,3 +4125,29 @@ confluito in `roadmap-esame.md` e `todo-agenti.md`.
   Ollama e un indice numpy con `cosine_similarity`; pacchetti bloccati
   disinstallati, `chatbot.md`, `architecture.md`, `roadmap-esame.md`,
   `todo-agenti.md`, `concepts.md`, `project-overview.md` riallineate.
+
+# 2026-10-23 — ondate 3-4: ML supervisionato, client LLM, RAG, tool, etica, test set
+
+Lavoro eseguito da subagenti in parallelo; wiki e stati aggiornati dal
+coordinatore. Ollama 0.40.9 installato dall'utente; scaricati `qwen2.5:7b`
+e `bge-m3` (CPU: 6–12 s per risposta a modello caldo, 44 s la prima).
+
+- **Pipeline automatica**: `scripts/aggiorna_pipeline.py` rigenera il blocco
+  `PIPELINE:START/END` in `roadmap-esame.md` dagli stati di `todo-agenti.md`
+  (fasi, avanzamento, task pronti). Hook PostToolUse (Edit|Write|MultiEdit)
+  in `.claude/settings.local.json` (cartella `phython` e progetto).
+- **T2.1**: `temperature_regression.py` + `train_temperature_model.py`;
+  RandomForest scelto (GroupKFold RMSE 0,594, R² 0,889); elevazione dominante;
+  MLP instabile. 9 test.
+- **T2.2**: pagina 09 a schede (Clustering + PCA, Regressione, Limiti).
+- **T3.1**: `llm_client.py` (Ollama, Anthropic opzionale, `FakeLLM`,
+  `stato_llm`); 23 test.
+- **T4.1 / T4.2**: `rag.py`, `build_knowledge_base.py`, 4 schede in
+  `data/knowledge_base/`; cancello 6/6. Escluso dal corpus
+  `paper/manoscritto.md` (numeri superati); corretti due test che contavano
+  i suoi chunk; indice ricostruito.
+- **T5.1**: 6 tool in `tools.py` con whitelist ed errori come osservazioni;
+  tolta un'etichetta di cluster non presente nella wiki.
+- **T8.1**: `tests/chatbot/test_set.csv` (28 domande, valori dai tool reali)
+  + validazione.
+- **T9.1**: pagina 11 "Etica e limiti" collegata dalla Home.

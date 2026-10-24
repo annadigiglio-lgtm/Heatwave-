@@ -10,10 +10,10 @@ Sequenza di lavoro in [Pipeline d'esame](roadmap-esame.md), attività in
 |---|---|---|---|
 | 1 | Dati con pandas | ✅ | ETL, `DataCleaner`, snapshot Parquet |
 | 2 | Visualizzazione | ✅ | 8 pagine Plotly/Folium, 3 progetti QGIS |
-| 3 | ML classificazione/regressione (scikit-learn) | ⚠️ | c'è solo K-Means (non supervisionato) → T2.1 |
-| 4 | API LLM | ❌ | nessun codice → T3.1 |
-| 5 | Agente con almeno 2 tool | ❌ | → T5.1, T6.1 |
-| 6 | RAG | ❌ | → T4.1, T4.2 |
+| 3 | ML classificazione/regressione (scikit-learn) | ✅ | regressore RandomForest vs Linear vs MLP, GroupKFold R² 0,889 (T2.1) |
+| 4 | API LLM | ✅ | `src/chatbot/llm_client.py`: Ollama qwen2.5:7b + bge-m3, Anthropic opzionale (T3.1) |
+| 5 | Agente con almeno 2 tool | 🔄 | 6 tool pronti (T5.1); agente da fare (T6.1) |
+| 6 | RAG | ✅ | `src/chatbot/rag.py`: embedding bge-m3 + indice numpy, 4 schede curate, cancello 6/6 (T4.1, T4.2) |
 | — | Streamlit funzionante | ✅ | `dashboard/Home.py` + 8 pagine |
 | — | README, requirements | ⚠️ | `.env.example` e dipendenze del chatbot presenti; il README cita ancora il deploy pubblico |
 | — | Bonus: test automatici | ✅ | 37 test pytest |

@@ -4,7 +4,8 @@ Home.py - Heatwave Piemonte Dashboard (pagina principale)
 Entry point Streamlit. Le altre pagine sono in `pages/` (convenzione
 multipage di Streamlit): 02_analisi_temporale, 03_analisi_spaziale,
 04_ondate_di_calore, 05_contesto_territoriale, 06_sintesi_della_ricerca,
-07_download_dati, 08_citazioni_e_fonti.
+07_download_dati, 08_citazioni_e_fonti, 09_machine_learning,
+11_etica_e_limiti.
 
 Usage:
     streamlit run dashboard/Home.py
@@ -274,6 +275,13 @@ st.caption(
     "k, il silhouette score e i limiti del modello."
 )
 st.page_link("pages/09_machine_learning.py", label="Apri Machine Learning →")
+
+st.subheader("Etica, privacy e limiti")
+st.caption(
+    "Cosa il progetto è e cosa non è: limiti dei dati e dei modelli, uso "
+    "responsabile dell'assistente AI, richiamo ad AI Act e GDPR."
+)
+st.page_link("pages/11_etica_e_limiti.py", label="Apri Etica e limiti →")
 
 st.divider()
 st.caption("Progetto portfolio di analisi dati climatici — Data Engineering / Data Science / GIS.")

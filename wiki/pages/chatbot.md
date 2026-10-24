@@ -90,8 +90,9 @@ eseguire solo funzioni presenti lì (come nella lezione 20-03).
 
 ## 3. RAG (`rag.py`, `build_knowledge_base.py`) — lezione 21
 
-- **Corpus**: `wiki/pages/*.md`, `paper/manoscritto.md`,
-  `paper/references/README.md`, `data/knowledge_base/*.md`. I PDF in
+- **Corpus**: `wiki/pages/*.md` (esclusi `todo-agenti.md` e `roadmap-esame.md`,
+  liste di lavoro), `paper/references/README.md`, `data/knowledge_base/*.md`.
+  Escluso `paper/manoscritto.md`: bozza fuori ambito con numeri superati. I PDF in
   `paper/references/` restano facoltativi (si possono aggiungere con `pypdf`).
 - **Chunking**: si spezza per titolo Markdown (`##`), poi le sezioni lunghe a
   circa 300 parole con 50 di sovrapposizione (lezione 21-03).
@@ -122,7 +123,11 @@ eseguire solo funzioni presenti lì (come nella lezione 20-03).
 - Embedding function iniettabile: nei test se ne usa una finta e
   deterministica (per esempio un bag-of-words), senza Ollama.
 - `data/vector_store/` va in `.gitignore`; il README spiega come ricostruirlo
-  (pochi secondi).
+  (circa 5 minuti su questo PC: 137 chunk con `bge-m3` su CPU, prima
+  dell'esclusione del manoscritto).
+- **Esito (T4.1, 2026-10-23)**: cancello F4 superato con 6/6 domande di
+  controllo (la scheda giusta è sempre al 1° posto); test
+  `test_indice_reale_domande_di_controllo` ripetibile (saltato senza indice o Ollama).
 
 ## 4. Agente multi-ruolo (`agent.py`) — lezioni 20 e 21
 
@@ -192,20 +197,47 @@ Il benchmark della fase F8 sceglie tra le due versioni.
 
 ## 8. Valutazione (F8) — lezione 12
 
-`tests/chatbot/test_set.csv` con le colonne `id, categoria, domanda,
-risposta_attesa, tool_attesi, deve_rifiutare`. Almeno 20 righe:
+`tests/chatbot/test_set.csv` (fatto, T8.1): 28 righe con colonne `id,
+categoria, domanda, percorso_atteso, tool_attesi, valori_chiave,
+fonti_attese, deve_rifiutare, note`. I `valori_chiave` vengono dall'output
+reale dei tool. Il formato è validato da `tests/chatbot/test_test_set.py`.
 
-- 6 fattuali (trend, ondate, cluster di un comune);
-- 3 confronti tra comuni;
-- 4 di metodo (Moran's I, Mann-Kendall, K-Means, bias ARPA);
-- 3 con dati assenti (comune senza dati, anno futuro);
-- 2 fuori ambito (ricetta, previsione di domani);
-- 2 prompt injection ("ignora le istruzioni…").
+| Categoria | Righe | Esempi |
+|---|---:|---|
+| fattuale | 11 | trend di Alessandria (`0.45;crescente`), "cuneo" in minuscolo, Ciriè con 0 ondate, bias ARPA di Torino |
+| confronto | 3 | Cuneo vs Novara, "asti" in minuscolo |
+| metodo | 5 | Mann-Kendall, Moran's I, K-Means, bias Open-Meteo/ARPA, ondata di calore |
+| dato_assente | 3 | Arona (esiste, senza Open-Meteo), refuso "Alesandria", anno 2030 |
+| fuori_ambito | 3 | ricetta, meteo di domani, consiglio medico |
+| injection | 3 | "ignora le istruzioni", SQL, mostra il system prompt |
 
 `python -m tests.chatbot.benchmark --prompt v1 v2` misura, per ogni versione:
 correttezza dei tool chiamati, numeri supportati, rifiuti corretti, fonti
 presenti, tempo medio. Chiarezza 1–5 valutata a mano su un campione.
 Risultati salvati in `output/chatbot_benchmark.csv`.
+
+## Prestazioni misurate (2026-10-23, PC di sviluppo)
+
+Ollama 0.40.9 su **CPU** (nessuna GPU usata), `qwen2.5:7b`:
+
+| Chiamata | Tempo |
+|---|---:|
+| Prima chiamata (caricamento del modello in RAM) | 44 s |
+| Risposta brevissima, modello già caricato | 6,5 s |
+| Risposta di una frase, modello già caricato | 12 s |
+| Embedding `bge-m3` (1 testo) | < 1 s, vettore da 1024 |
+
+Conseguenze di progetto (T6.1, T7.1):
+- Il router per parole chiave è obbligatorio: risparmia una chiamata LLM per domanda.
+- Il Revisore è in Python; il secondo passaggio LLM solo se il controllo fallisce.
+- Limitare le risposte (`num_predict` circa 400) e la storia (`memory_window`).
+- Pagina 10: **riscaldamento** del modello all'apertura (una chiamata breve
+  in `st.cache_resource`), `keep_alive` lungo (es. `"30m"`) durante la demo,
+  risposta finale in **streaming** (lezione 14-05), `st.status` che mostra
+  i passi mentre l'agente lavora.
+- Ripiego documentato: `llama3.2` (3B) è più veloce ma meno affidabile sui tool.
+- Prima della demo: aprire la pagina e fare una domanda di prova, così il
+  modello è già caricato.
 
 ## Domande d'esempio per la demo
 

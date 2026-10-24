@@ -19,7 +19,10 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 5. Chiudere il task solo se il comando di **verifica** passa. Riportare
    l'output reale; se qualcosa fallisce, stato ⛔ con il motivo.
 6. A fine task: stato aggiornato qui, una riga in `wiki/log.md`, e le pagine
-   wiki toccate dal cambiamento aggiornate.
+   wiki toccate dal cambiamento aggiornate. Lo schema della pipeline in
+   [roadmap-esame.md](roadmap-esame.md) si rigenera da solo (hook di Claude
+   Code) quando questa pagina viene modificata con Edit/Write; se la modifichi
+   in altro modo, lancia `python scripts/aggiorna_pipeline.py`.
 7. Niente commit o push senza richiesta esplicita dell'utente.
 
 ## Ondate di lavoro (cosa si può fare in parallelo)
@@ -105,7 +108,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F2 — Machine Learning supervisionato
 
-### T2.1 ⬜ Regressore della temperatura (Linear, RandomForest, MLP)
+### T2.1 ✅ Regressore della temperatura (Linear, RandomForest, MLP)
 - **Dipende da:** T1.3 · **Corso:** lezioni 16 (pipeline, metriche, CV),
   17 (RandomForest, GridSearchCV, Pipeline), 18 (reti neurali), 19 (joblib)
 - **File:** `src/machine_learning/temperature_regression.py`,
@@ -128,13 +131,13 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
     `models/temperature_regressor_metadata.json` (feature, n righe, tabella
     metriche di tutti i modelli, parametri migliori, importanza delle
     feature con `permutation_importance`, data, seed);
-  - salvare i residui in `output/temperature_regression_residuals.csv`.
+  - salvare i residui in `data/dashboard_export/temperature_regression_residuals.parquet`.
 - **Accettazione:** lo script gira senza database; i metadati contengono le
   metriche di tutti e tre i modelli; i test usano un dataset sintetico piccolo.
 - **Verifica:** `python -m src.machine_learning.train_temperature_model`;
   `python -m pytest tests/test_temperature_regression.py -q`.
 
-### T2.2 ⬜ Pagina ML: sezioni supervisionato e PCA
+### T2.2 ✅ Pagina ML: sezioni supervisionato e PCA
 - **Dipende da:** T1.1, T2.1 · **Corso:** lezione 18-02 (PCA)
 - **File:** `dashboard/pages/09_machine_learning.py`, `src/machine_learning/__init__.py`
 - **Fare:** organizzare la pagina in `st.tabs` — "Clustering" (contenuto
@@ -142,7 +145,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   spiegata), "Regressione" (tabella metriche dei 3 modelli con KFold vs
   GroupKFold, barre di importanza delle feature, scatter predetto vs
   osservato, mappa dei residui), "Limiti". Si leggono solo i file in
-  `models/` e `output/`: nessun training nella pagina.
+  `models/` e `data/dashboard_export/`: nessun training nella pagina.
 - **Verifica:** AppTest della pagina senza eccezioni.
 
 ### T2.3 ⬜ (Facoltativo) Modello del bias Open-Meteo vs ARPA
@@ -153,7 +156,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F3 — Client LLM
 
-### T3.1 ⬜ `llm_client.py` + FakeLLM
+### T3.1 ✅ `llm_client.py` + FakeLLM
 - **Dipende da:** T1.3 · **Corso:** lezione 13 (wrapper universale, sicurezza delle chiavi)
 - **File:** `src/chatbot/__init__.py`, `src/chatbot/llm_client.py`, `tests/chatbot/test_llm_client.py`
 - **Fare:** come descritto in [Chatbot §1](chatbot.md).
@@ -163,8 +166,8 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F4 — RAG
 
-### T4.1 ⬜ Knowledge base e indice vettoriale
-- **Dipende da:** T1.3, Ollama installato con `ollama pull bge-m3` (solo per
+### T4.1 ✅ Knowledge base e indice vettoriale
+- **Dipende da:** T1.3, T3.1, Ollama installato con `ollama pull bge-m3` (solo per
   il build reale, non per i test) · **Corso:** lezione 21-02, 21-03, 21-04; 19 (`cosine_similarity`)
 - **File:** `src/chatbot/rag.py`, `src/chatbot/build_knowledge_base.py`,
   `tests/chatbot/test_rag.py`
@@ -175,7 +178,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 - **Verifica:** `python -m src.chatbot.build_knowledge_base` stampa il numero
   di chunk per fonte; `python -m pytest tests/chatbot/test_rag.py -q`.
 
-### T4.2 ⬜ Schede curate per la knowledge base
+### T4.2 ✅ Schede curate per la knowledge base
 - **Dipende da:** T4.1
 - **File:** `data/knowledge_base/metodologia.md`, `faq.md`, `glossario.md`, `limiti.md`
 - **Fare:** testi brevi e divulgativi, una sezione `##` per argomento,
@@ -186,7 +189,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F5 — Tool dati
 
-### T5.1 ⬜ Sei tool controllati
+### T5.1 ✅ Sei tool controllati
 - **Dipende da:** T1.1 · **Corso:** lezione 20-02, 20-03, 20-04 (sicurezza)
 - **File:** `src/chatbot/tools.py`, `tests/chatbot/test_tools.py`
 - **Fare:** [Chatbot §2](chatbot.md). Lettura dei
@@ -197,10 +200,16 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   (`difflib.get_close_matches`); anno fuori 2000–2026 → errore; output
   sempre serializzabile in JSON.
 - **Verifica:** `python -m pytest tests/chatbot/test_tools.py -q`.
+- **Esito (2026-10-23):** 6 tool + `TOOLS`, `TOOL_DESCRIPTIONS`,
+  `descrivi_tool_per_prompt()`, `esegui_tool()` (whitelist, parametri
+  sconosciuti/mancanti → `{"errore": ...}`); 17 test. Sui dati reali:
+  "Biela" → suggerisce Biella; comuni senza Open-Meteo dichiarati; 2026
+  trattato come anno parziale (204 giorni). Punto aperto: il trend di
+  `trend_analysis.parquet` include il 2026 parziale (vedi nota nel tool).
 
 ## F6 — Agente
 
-### T6.1 ⬜ Agente multi-ruolo, memoria, prompt
+### T6.1 🔄 Agente multi-ruolo, memoria, prompt
 - **Dipende da:** T3.1, T4.1, T5.1 · **Corso:** lezioni 15, 20-03, 21-03, 21-05
 - **File:** `src/chatbot/agent.py`, `src/chatbot/memory.py`,
   `src/chatbot/prompts.py`, `tests/chatbot/test_agent.py`
@@ -225,7 +234,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F8 — Valutazione
 
-### T8.1 ⬜ Test set
+### T8.1 ✅ Test set
 - **Dipende da:** T5.1 · **File:** `tests/chatbot/test_set.csv`
 - **Fare:** 20+ righe come in [Chatbot §8](chatbot.md).
   Le risposte attese si ricavano chiamando direttamente i tool.
@@ -236,22 +245,39 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   tab "Valutazione" in pagina 10
 - **Fare:** eseguire con Ollama reale (non è un test pytest); salvare
   metriche per prompt; scrivere nella wiki il prompt vincente e gli errori residui.
+- **Regole di confronto (dal lavoro di T8.1):** cercare i `valori_chiave`
+  come numeri interi (non sottostringhe: `0`, `1`, `2` darebbero falsi
+  positivi) e normalizzare la virgola decimale italiana (`0,45` = `0.45`);
+  per D01/D03 (`deve_rifiutare = si` con tool atteso) la chiamata al tool che
+  restituisce errore è il comportamento corretto; per C01 sono accettabili
+  anche due `get_heatwave_summary` al posto di `compare_locations`.
+  Tempo stimato su CPU: 28 domande × 2 prompt × circa 20–40 s.
 - **Verifica:** il CSV esiste e la tab lo mostra.
 
 ## F9 — Etica
 
-### T9.1 ⬜ Pagina "Etica e limiti"
+### T9.1 ✅ Pagina "Etica e limiti"
 - **Dipende da:** T0.1 · **Corso:** lezione 10
 - **File:** `dashboard/pages/11_etica_e_limiti.py`, `dashboard/Home.py`
 - **Fare:** trasformare [Etica e limiti](etica-e-limiti.md) in pagina,
   con lo stile di `components/styling.py`; link dalla Home.
 - **Verifica:** AppTest senza eccezioni.
+- **Esito (2026-10-23):** pagina con sezioni "è / non è", 4 card di limiti
+  (conteggi letti da `queries.get_overview_stats()`), tab Dati / ML / Chatbot /
+  AI Act e GDPR, avviso del chatbot in evidenza; link dalla Home sotto il
+  blocco Machine Learning. AppTest pagina 11 e Home senza eccezioni.
+  Da ricontrollare: le formulazioni su AI Act/GDPR vengono dalla lezione 10,
+  non dalla wiki di progetto.
 
 ## F10 — Qualità
 
 ### T10.1 ⬜ Test, lint, README
 - **Dipende da:** T7.1, T9.1
 - **File:** `tests/test_pages_smoke.py`, `README.md`
+- **Attenzione (scoperto in T9.1):** una pagina che contiene `st.page_link`
+  verso pagine sorelle fallisce in AppTest se eseguita da sola
+  (`KeyError: 'url_pathname'`): testare dalla Home con `at.switch_page(...)`
+  oppure evitare `page_link` nelle pagine figlie (03 e 05 li usano).
 - **Fare:** smoke test AppTest per le pagine 09, 10, 11 (e Home); `flake8
   src/chatbot src/machine_learning`; README: prerequisiti (Python 3.11+,
   PostgreSQL facoltativo per la demo, Ollama + `ollama pull qwen2.5:7b`),
