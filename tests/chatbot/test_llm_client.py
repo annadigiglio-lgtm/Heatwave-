@@ -466,4 +466,3 @@ def test_crea_client_gemini_con_riserva(monkeypatch):
     monkeypatch.setattr(llm_client.config, 'get', lambda k, d=None: valori.get(k, originale(k, d)))
     assert isinstance(llm_client.crea_client('gemini'), ClientConRiserva)
     assert isinstance(llm_client.crea_client('gemini', con_riserva=False), GeminiClient)
-

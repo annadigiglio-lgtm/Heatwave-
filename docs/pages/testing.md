@@ -12,7 +12,7 @@ DataFrame sintetici, cartelle temporanee (`tmp_path`), LLM finti (`FakeLLM`)
 e mock degli SDK. `tests/conftest.py` disattiva per tutta la suite la cache
 su disco delle risposte del chatbot.
 
-## Suite attuale — 243 test (2026-10-24)
+## Suite attuale — 245 test (2026-10-24)
 
 | File | Test | Cosa verifica |
 |---|---:|---|
@@ -21,7 +21,7 @@ su disco delle risposte del chatbot.
 | `test_config.py` | 5 | `Config.get()`, precedenza delle variabili d'ambiente su `config.yaml` |
 | `test_machine_learning.py` | 5 | Pipeline K-Means, silhouette, ordine dei cluster, `joblib`, feature mancanti |
 | `test_temperature_regression.py` | 9 | merge e densità, NaN esclusi, 3 Pipeline, KFold/GroupKFold, residui, `joblib` |
-| `test_pages_smoke.py` | 2 | AppTest della pagina 10 (con `FakeLLM`) e della Home |
+| `test_pages_smoke.py` | 4 | AppTest della pagina 10 (con `FakeLLM`) e delle pagine 09 e 11 con database irraggiungibile |
 | `chatbot/test_llm_client.py` | 44 | Ollama (timeout, server spento, modello mancante), Gemini (ruoli, streaming, quota giornaliera, errori), Anthropic, riserva automatica, `FakeLLM`, `stato_llm` |
 | `chatbot/test_tools.py` | 17 | 6 tool, comune inesistente con suggerimenti, anni non validi, output JSON, whitelist |
 | `chatbot/test_rag.py` | 21 | chunking, indice numpy salva/carica, retrieval, esclusioni del corpus, controllo sull'indice reale (saltato se manca) |

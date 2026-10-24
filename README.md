@@ -1,165 +1,205 @@
 # Il riscaldamento del Piemonte
 
-### Un'analisi spazio-temporale dei trend termici e delle ondate di calore
+### Analisi spazio-temporale delle temperature e delle ondate di calore, con un assistente AI che risponde sui dati
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue)](https://www.python.org/downloads/)
+[![Test](https://img.shields.io/badge/test-245%20pytest-brightgreen)](docs/pages/testing.md)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Dashboard](https://img.shields.io/badge/Dashboard-live-orange)](https://heatwave-piemonte.streamlit.app/)
 
-**Dashboard live: https://heatwave-piemonte.streamlit.app/**
+Progetto finale del corso ITS *Data Manager for Business Intelligence
+Software Developer*. Heatwave Piemonte raccoglie e pulisce 25 anni di
+temperature giornaliere dei comuni piemontesi, li confronta con le stazioni
+reali di ARPA Piemonte, li analizza con statistica, statistica spaziale e
+Machine Learning, e li rende consultabili in una dashboard Streamlit con un
+**assistente climatico** basato su LLM, agenti con tool e RAG.
 
-## Descrizione
+![Assistente climatico](docs/screenshots/assistente_climatico.png)
 
-Heatwave Piemonte è un progetto di Data Engineering, Data Science e GIS che
-analizza l'evoluzione delle temperature e delle ondate di calore nei comuni
-piemontesi dal 2000 a oggi. Copre l'intera pipeline: acquisizione dati da
-fonti pubbliche, pulizia e caricamento in un database geospaziale, analisi
-statistica e spaziale, mappe GIS e una dashboard interattiva pubblicata online.
+## Le competenze del corso nel progetto
 
-I dati di temperatura (Open-Meteo) sono validati contro le stazioni reali di
-ARPA Piemonte, per quantificare quanto ci si può fidare di una rianalisi
-climatica rispetto a un'osservazione a terra — un passaggio spesso dato per
-scontato in analisi simili.
+| Competenza richiesta | Dove si trova |
+|---|---|
+| **Dati con pandas** | ETL di 5,8 milioni di righe (`src/data_acquisition`, `src/data_processing`), pulizia e controlli di qualità, snapshot Parquet |
+| **Visualizzazione** | 11 pagine Streamlit con Plotly e Folium, 3 progetti QGIS |
+| **Machine Learning (scikit-learn)** | regressione della temperatura (Linear, RandomForest con GridSearchCV, MLP) validata con KFold e GroupKFold; clustering K-Means con silhouette e PCA; modelli salvati con `joblib` |
+| **API LLM** | Gemini (piano gratuito) con riserva automatica su Ollama locale; Anthropic opzionale |
+| **Agente con tool** | router, analista con 6 tool sui dati in whitelist, ricercatore, revisore dei numeri (`src/chatbot/agent.py`) |
+| **RAG** | knowledge base dai documenti del progetto, embedding `bge-m3`, indice vettoriale con similarità del coseno (`src/chatbot/rag.py`) |
 
-## Domande di ricerca
+## Cosa contiene
 
-- Le giornate con temperature estreme (>30°C, >35°C, >40°C) sono aumentate nel tempo?
-- Quali province mostrano i maggiori incrementi di temperatura?
-- Esistono pattern geografici e stagionali significativi?
-- Quali comuni sono più vulnerabili alle ondate di calore, e perché (elevazione, urbanizzazione, uso del suolo)?
+- **Dati**: temperature giornaliere Open-Meteo per 599 dei 1180 comuni
+  (2000 – luglio 2026), validazione contro 218 stazioni ARPA, popolazione
+  ISTAT, uso del suolo CORINE, NDVI Copernicus, confini ISTAT. Database
+  PostgreSQL + PostGIS; l'app legge uno snapshot Parquet incluso nel repository.
+- **Analisi**: trend (Mann-Kendall e regressione), decomposizione stagionale
+  STL, autocorrelazione spaziale (Moran's I), regressione a errore spaziale,
+  confronto Open-Meteo contro ARPA (bias di circa −1,5 °C sulle massime).
+- **Machine Learning** (pagina 09): il RandomForest spiega la temperatura
+  media dei comuni con R² 0,89 in validazione per provincia; l'elevazione è
+  il fattore dominante. La rete neurale (MLP) non aiuta su circa 600 righe
+  tabellari: è un risultato discusso nella pagina, non nascosto.
+- **Assistente climatico** (pagina 10): domande in italiano su trend, ondate
+  di calore, confronti tra comuni, cluster, metodi e limiti. I numeri vengono
+  solo dai tool sui dati verificati, le spiegazioni dai documenti del progetto
+  con le fonti citate. Rifiuta previsioni, consigli medici e tentativi di
+  prompt injection senza chiamare il modello.
+- **Etica e limiti** (pagina 11): cosa il progetto è e non è, limiti di dati e
+  modelli, privacy del chatbot, richiami a AI Act e GDPR.
 
-## Cosa contiene il progetto
+| Machine Learning | Etica e limiti |
+|---|---|
+| ![Machine Learning](docs/screenshots/machine_learning.png) | ![Etica e limiti](docs/screenshots/etica_e_limiti.png) |
 
-- **Acquisizione dati**: temperature giornaliere da Open-Meteo (599 comuni,
-  2000–oggi, oltre 5,8 milioni di righe), validazione contro 218 stazioni
-  reali ARPA Piemonte, popolazione (ISTAT), uso del suolo (Copernicus CORINE
-  Land Cover), indice di vegetazione NDVI (Copernicus Global Land Service),
-  confini amministrativi dei 1180 comuni piemontesi (ISTAT).
-- **Database**: PostgreSQL + PostGIS, schema con tabelle temperature/ondate
-  di calore/uso del suolo, viste materializzate per i KPI annuali, funzione
-  SQL per l'identificazione delle ondate di calore.
-- **Analisi statistica e spaziale**: trend di riscaldamento (Mann-Kendall e
-  regressione lineare), decomposizione stagionale (STL), autocorrelazione
-  spaziale (indice di Moran), clustering climatico (K-means), modello di
-  regressione a errore spaziale (temperatura in funzione di elevazione,
-  popolazione, uso del suolo, NDVI).
-- **Validazione**: confronto sistematico Open-Meteo vs stazioni ARPA reali
-  — correlazione alta (r≈0.97) ma bias sistematico negativo che cresce con
-  l'elevazione, e un tasso di rilevamento delle ondate di calore reali
-  inferiore a quanto la sola rianalisi suggerirebbe. Risultato riportato
-  onestamente come limite del dataset, non nascosto.
-- **Mappe GIS**: 3 progetti QGIS (heatmap provinciale, cluster climatici,
-  animazione temporale 2000–oggi) generati via PyQGIS.
-- **Dashboard Streamlit**: 8 pagine (panoramica, analisi temporale, analisi
-  spaziale, ondate di calore, contesto territoriale, sintesi divulgativa dei
-  risultati, download dati, citazioni e fonti), con selettore Open-Meteo /
-  ARPA / confronto diretto tra le due fonti.
-- **Test**: 31 test pytest sulla pipeline di pulizia dati e sulle funzioni di
-  analisi, 86% di copertura sul modulo di pulizia.
+## Avvio rapido (solo l'app)
 
-## Stack tecnologico
-
-- **Python** — pandas, numpy, geopandas, SQLAlchemy
-- **Database** — PostgreSQL + PostGIS
-- **GIS** — QGIS (via PyQGIS headless), Folium, Shapely
-- **Analisi** — scikit-learn, statsmodels, pymannkendall, libpysal/spreg
-- **Dashboard** — Streamlit, Plotly
-- **Test** — pytest
-
-## Struttura del progetto
-
-```
-heatwave-piemonte/
-├── src/
-│   ├── data_acquisition/   # Open-Meteo, ARPA, popolazione, uso del suolo, NDVI, elevazione
-│   ├── data_processing/    # pulizia dati, export snapshot per la dashboard
-│   ├── database/           # caricamento nel database
-│   ├── analysis/           # trend, ondate di calore, STL, Moran's I, clustering, regressione spaziale, validazione ARPA
-│   └── utils/              # configurazione, logging
-├── sql/                    # schema DB e query
-├── qgis_projects/          # generazione mappe via PyQGIS
-├── dashboard/              # applicazione Streamlit (Home.py + pages/)
-├── data/                   # dati grezzi, elaborati, esterni, snapshot per il deploy
-├── tests/                  # test pytest
-├── docs/                   # documentazione (wiki): index.md, pages/, log.md
-├── docs/                   # documenti di pianificazione originali (obiettivi iniziali del progetto)
-├── config.yaml             # configurazione centrale
-└── requirements.txt        # dipendenze Python
-```
-
-## Come eseguirlo in locale
-
-Per usare la dashboard non serve installare nulla: è pubblica su
-https://heatwave-piemonte.streamlit.app/ e legge uno snapshot dei dati già
-calcolato, senza bisogno di un database live.
-
-Per riprodurre l'intera pipeline in locale:
+Non serve PostgreSQL: dati e modelli sono già nel repository. Comandi per
+Windows (su Linux/macOS: `source .venv/bin/activate` e `cp` al posto di `copy`).
 
 ```bash
 git clone https://github.com/annadigiglio-lgtm/Heatwave-.git
 cd Heatwave-
-
 python -m venv .venv
-.venv\Scripts\activate       # Linux/Mac: source .venv/bin/activate
-pip install -r requirements.txt
+.venv\Scripts\activate
+pip install -r requirements-dashboard.txt
+copy .env.example .env
+```
 
-cp .env.example .env          # configura le credenziali del database
-psql -U postgres -f sql/01_init_database.sql
+Poi, per l'assistente:
 
-python -m src.data_acquisition.download_data
-python -m src.database.load_to_db
+1. **Chiave Gemini gratuita**: crearla su [aistudio.google.com](https://aistudio.google.com)
+   ("Get API key") e scriverla in `.env` alla riga `GOOGLE_API_KEY=`.
+2. **Ollama** ([ollama.com](https://ollama.com)), che serve per gli embedding
+   dei documenti e come riserva locale:
+   ```bash
+   ollama pull bge-m3
+   ollama pull qwen2.5:7b
+   ```
+3. **Indice dei documenti** (circa 3 minuti su CPU):
+   ```bash
+   python -m src.chatbot.build_knowledge_base
+   ```
 
+Avvio della dashboard:
+
+```bash
 streamlit run dashboard/Home.py
 ```
 
-Richiede PostgreSQL 14+ con estensione PostGIS. Gli script aggiuntivi di
-acquisizione (ARPA, popolazione, uso del suolo, NDVI, elevazione) sono in
-`src/data_acquisition/` e vengono eseguiti separatamente man mano che si
-aggiungono covariate all'analisi.
+Senza chiave Gemini l'assistente funziona con Ollama, scegliendolo nella barra
+laterale; su un portatile senza GPU una risposta richiede però 1–3 minuti.
 
-## Test
+## Come funziona l'assistente
+
+```text
+domanda → router (regole) ─┬─ fuori ambito / injection / futuro → rifiuto, senza LLM
+                           ├─ dati    → tool sui Parquet (scelto dalle regole o dall'LLM)
+                           ├─ metodo  → RAG sui documenti del progetto
+                           └─ misto   → tool + RAG
+        → LLM (Gemini; riserva automatica su Ollama) → revisore dei numeri → risposta con fonti
+```
+
+- **Motore**: Gemini 3.1 Flash Lite risponde in 2–12 s. Se non risponde
+  (quota giornaliera gratuita finita, rete assente, servizio sovraccarico), la
+  domanda passa da sola a Ollama `qwen2.5:7b` e la risposta lo segnala.
+- **Cache**: una domanda già posta con gli stessi dati, modello e prompt viene
+  servita subito dalla cache locale (`data/cache_risposte/`, fuori da git,
+  svuotabile dalla pagina).
+- **Valutazione**: benchmark su 28 domande (fattuali, confronti, metodo, dati
+  assenti, fuori ambito, injection) con criteri oggettivi. Con il prompt v2:
+  **85,7% di risposte corrette, 100% di rifiuti corretti, nessun numero
+  inventato**. Il benchmark ha trovato un errore grave ("ci saranno ondate nel
+  2030?" riceveva una previsione inventata), poi corretto. I risultati sono
+  nella tab *Valutazione* della pagina 10.
+
+## Pipeline completa (facoltativa)
+
+Per rigenerare dati, analisi e modelli serve PostgreSQL 14+ con PostGIS:
 
 ```bash
-pytest tests/ -v
-pytest tests/ --cov=src.data_processing --cov=src.analysis --cov=src.utils.config --cov-report=term-missing
+pip install -r requirements.txt
+psql -U postgres -f sql/01_init_database.sql          # più sql/03-05 per le covariate
+python -m src.data_acquisition.download_data          # altri script in src/data_acquisition/
+python -m src.database.load_to_db
+python -m src.data_processing.refresh_dashboard       # analisi + export Parquet
+python -m src.machine_learning.train_climate_model    # K-Means (richiede il DB)
+python -m src.machine_learning.train_temperature_model  # regressore (solo Parquet, ~6 min)
+```
+
+## Test e qualità
+
+```bash
+python -m pytest tests -q                              # 245 test, senza rete né database
+python -m flake8 src/chatbot src/machine_learning tests/chatbot scripts   # moduli d'esame: puliti (.flake8)
+python -m tests.chatbot.benchmark --provider ollama    # benchmark del chatbot (modello reale)
+```
+
+## Struttura del progetto
+
+```text
+├── dashboard/            # Streamlit: Home.py + 10 pagine (09 ML, 10 assistente, 11 etica)
+├── src/
+│   ├── data_acquisition/ # Open-Meteo, ARPA, ISTAT, CORINE, NDVI, elevazione
+│   ├── data_processing/  # pulizia, export Parquet, refresh delle analisi
+│   ├── database/         # caricamento in PostgreSQL/PostGIS
+│   ├── analysis/         # trend, STL, Moran's I, regressione spaziale, validazione ARPA
+│   ├── machine_learning/ # K-Means e regressore della temperatura
+│   ├── chatbot/          # client LLM, tool, RAG, agente, memoria, prompt, cache
+│   └── utils/            # configurazione, database, logging
+├── data/
+│   ├── dashboard_export/ # snapshot Parquet letto dall'app
+│   ├── knowledge_base/   # schede curate per il RAG
+│   └── benchmark/        # risultati della valutazione del chatbot
+├── models/               # modelli joblib + metadati
+├── tests/                # pytest; tests/chatbot/ contiene anche test set e benchmark
+├── docs/                 # documentazione (wiki): index.md, pages/, screenshots/
+├── sql/  qgis_projects/  scripts/  paper/
+├── config.yaml           # configurazione centrale (chatbot, ML, percorsi)
+└── .env.example          # variabili d'ambiente necessarie (senza valori reali)
 ```
 
 ## Documentazione
 
-La documentazione tecnica (architettura, dati, pipeline ETL, analisi,
-Machine Learning, chatbot, test, etica) è in [`docs/`](docs/index.md),
-mantenuta come wiki e tenuta sincronizzata con lo stato reale del codice.
+La documentazione completa è in [`docs/`](docs/index.md):
+[architettura](docs/pages/architecture.md),
+[dati](docs/pages/data-sources.md), [ETL](docs/pages/etl-pipeline.md),
+[analisi](docs/pages/statistical-analysis.md),
+[Machine Learning](docs/pages/machine-learning.md),
+[chatbot](docs/pages/chatbot.md), [test](docs/pages/testing.md),
+[etica e limiti](docs/pages/etica-e-limiti.md),
+[glossario](docs/pages/concepts.md).
 
 ## Limiti noti
 
-- Copertura dati di temperatura reale: 599 dei 1180 comuni piemontesi per
-  Open-Meteo, 218 per ARPA Piemonte — copertura ARPA completa (tutti i
-  comuni con stazione attiva hanno anche dati Open-Meteo).
-- Open-Meteo (rianalisi climatica) sottostima sistematicamente le
-  temperature massime reali rispetto alle stazioni ARPA, con un bias che
-  cresce in territorio alpino — vedi la modalità "Confronto" nella
-  dashboard per il dettaglio quantitativo.
-- La mappa "Heatwave Index" (indice composito di intensità/frequenza) è
-  pianificata ma non ancora realizzata.
-- La dashboard pubblica legge uno snapshot statico dei dati: l'aggiornamento
-  non è automatico.
+- Copertura: 599 comuni su 1180 con Open-Meteo, 218 con stazioni ARPA.
+- Open-Meteo è una rianalisi: sottostima le massime di circa 1,5 °C rispetto
+  ad ARPA, di più in montagna e nei giorni più caldi.
+- Il progetto descrive il clima osservato: non fa previsioni, non è un
+  sistema di allerta e non dà indicazioni sanitarie.
+- Il piano gratuito di Gemini ha quote giornaliere basse (anche 20 richieste
+  per alcuni modelli); i limiti del proprio account sono su
+  [aistudio.google.com/rate-limit](https://aistudio.google.com/rate-limit).
+- Con Gemini le domande vengono inviate a Google: non inserire dati personali.
+- Sui PC Windows con Smart App Control attivo, ChromaDB e sentence-transformers
+  non si possono usare (librerie bloccate): per questo il RAG usa embedding
+  Ollama e un indice in numpy.
 
 ## Licenza
 
-Distribuito con licenza MIT — vedi [LICENSE](LICENSE).
+Distribuito con licenza MIT: vedi [LICENSE](LICENSE).
 
 ## Autore
 
-**Anna Digiglio** — laurea in Scienze Naturali, in formazione ITS Data
+**Anna Digiglio**: laurea in Scienze Naturali, in formazione ITS Data
 Manager for Business Intelligence Software Developer.
 
-- GitHub: [@Anna-digiglio](https://github.com/Anna-digiglio)
+- GitHub: [@annadigiglio-lgtm](https://github.com/annadigiglio-lgtm)
 - LinkedIn: [anna-digiglio](https://www.linkedin.com/in/anna-digiglio-76a144406/)
 - Email: anna.digiglio97@gmail.com
 
 ## Fonti dati
 
 Open-Meteo, ARPA Piemonte, ISTAT, Copernicus (CORINE Land Cover, NDVI Global
-Land Service) — dettaglio completo con link in
+Land Service): dettaglio con link in
 [docs/pages/data-sources.md](docs/pages/data-sources.md) e nella pagina
-"Citazioni e Fonti" della dashboard.
+"Citazioni e fonti" della dashboard.

@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-import pandas as pd
-
 from src.analysis.spatial_analysis import load_municipality_features
 from src.machine_learning.climate_clustering import (
     fit_climate_model,

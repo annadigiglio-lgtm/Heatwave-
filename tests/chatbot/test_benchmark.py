@@ -98,4 +98,3 @@ def test_dato_assente_rifiutato_dal_router():
     esito = valuta(_riga(categoria='dato_assente', percorso_atteso='fuori_ambito', deve_rifiutare='si'),
                    _risposta('Non posso fare previsioni.', percorso='fuori_ambito', chiamate=0))
     assert esito['corretta']
-

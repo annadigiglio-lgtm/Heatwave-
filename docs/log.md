@@ -4256,3 +4256,11 @@ al rifiuto "previsione") e pre-selezione (ogni anno a 4 cifre); test set D03 →
 `--rivaluta` e `--aggiorna`. Risultato finale: v2 85,7% corrette (v1 82,1%),
 100% rifiuti corretti, 0 numeri inventati, 51 s medi; vince v2. Indice RAG
 ricostruito con i percorsi `docs/pages`. 243 test.
+
+# 2026-10-24 — T10.1 chiuso: README, screenshot, lint
+
+README riscritto per la consegna; screenshot in `docs/screenshots/` (Chrome
+headless tramite DevTools Protocol, perché la cattura diretta prendeva solo la
+schermata di caricamento di Streamlit); smoke test delle pagine 09 e 11;
+`.flake8` e moduli d'esame senza segnalazioni; dipendenze del chatbot in
+`requirements-dashboard.txt`. 245 test passano.

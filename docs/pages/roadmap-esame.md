@@ -30,9 +30,9 @@ Bonus già presenti o previsti: test automatici, documentazione curata.
 ## Schema della pipeline (stato attuale)
 
 <!-- PIPELINE:START -->
-_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 15:50: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
+_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 16:00: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
 
-**Avanzamento:** 16/18 task obbligatori (88%) `█████████░`
+**Avanzamento:** 17/18 task obbligatori (94%) `█████████░`
 
 Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa · ⛔ bloccata
 
@@ -51,9 +51,9 @@ Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa
  │                             │
  │                          ✅ F8  Valutazione
  └──────────────┬──────────────┘
-             ▶️ F10 Qualità
+             ✅ F10 Qualità
                 │
-             ⬜ F11 Consegna e demo
+             ▶️ F11 Consegna e demo
 ```
 
 | Fase | Stato | Task |
@@ -68,13 +68,13 @@ Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa
 | F6 Agente | ✅ | T6.1 ✅ |
 | F7 Pagina Streamlit "Assistente climatico" | ✅ | T7.1 ✅ |
 | F8 Valutazione del chatbot | ✅ | T8.1 ✅ · T8.2 ✅ |
-| F10 Qualità | ▶️ | T10.1 ⬜ · T10.2 ✅ *(facolt.)* |
-| F11 Consegna e demo | ⬜ | T11.1 ⬜ |
+| F10 Qualità | ✅ | T10.1 ✅ · T10.2 ✅ *(facolt.)* |
+| F11 Consegna e demo | ▶️ | T11.1 ⬜ |
 
 **Task pronti da avviare** (dipendenze tutte ✅, eseguibili in parallelo):
 
 - T2.3 — (Facoltativo) Modello del bias Open-Meteo vs ARPA
-- T10.1 — Test, lint, README
+- T11.1 — Demo e presentazione
 <!-- PIPELINE:END -->
 
 Le fasi sullo stesso livello sono **indipendenti** e possono essere

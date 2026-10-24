@@ -353,7 +353,8 @@ def get_heatwave_summary(comune: str, anno: int | None = None, *,
             'comune': nome,
             'anno': anno,
             'n_ondate': int(len(dell_anno)),
-            'durata_media_giorni': _valore_python(dell_anno['duration_days'].mean()) if len(dell_anno) else None,
+            'durata_media_giorni': (_valore_python(dell_anno['duration_days'].mean())
+                                    if len(dell_anno) else None),
             'durata_max_giorni': _valore_python(dell_anno['duration_days'].max()) if len(dell_anno) else None,
             'intensita_max': _valore_python(dell_anno['intensity_index'].max()) if len(dell_anno) else None,
             'ondate_piu_intense': _ondate_in_lista(dell_anno),
@@ -379,7 +380,8 @@ def _indicatori_comune(nome: str, data_dir: Path | str | None) -> dict:
     return {
         'temp_media': None if spaziale is None else _valore_python(spaziale['temp_mean_avg']),
         'trend_per_decennio': None if trend is None else _valore_python(trend['lr_slope_per_decade']),
-        'trend_mann_kendall': None if trend is None else ESITI_MANN_KENDALL.get(trend['mk_trend'], trend['mk_trend']),
+        'trend_mann_kendall': (None if trend is None
+                               else ESITI_MANN_KENDALL.get(trend['mk_trend'], trend['mk_trend'])),
         'giorni_gt_30c_medi_annui': None if spaziale is None else _valore_python(spaziale['days_gt_30c_avg']),
         'giorni_gt_35c_medi_annui': None if spaziale is None else _valore_python(spaziale['days_gt_35c_avg']),
         'n_ondate': 0 if ondate is None else int(ondate['n_heatwaves']),
@@ -405,7 +407,8 @@ def compare_locations(comune_a: str, comune_b: str, *, data_dir: Path | str | No
     unita = {'temp_media': '°C', 'trend_per_decennio': '°C/decennio',
              'giorni': 'giorni/anno (media sul periodo)', 'n_ondate': 'ondate nel periodo'}
     note = [NOTA_RIANALISI, DEFINIZIONE_ONDATA]
-    return _risultato(valori, unita, FONTE_OPEN_METEO, f'{ANNO_MIN}-{ANNO_MAX} (medie sull\'intero periodo)', note)
+    periodo = f"{ANNO_MIN}-{ANNO_MAX} (medie sull'intero periodo)"
+    return _risultato(valori, unita, FONTE_OPEN_METEO, periodo, note)
 
 
 # --- 4. Cluster climatico --------------------------------------------------

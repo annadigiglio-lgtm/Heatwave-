@@ -284,7 +284,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F10 — Qualità
 
-### T10.1 ⬜ Test, lint, README
+### T10.1 ✅ Test, lint, README
 - **Dipende da:** T7.1, T9.1
 - **File:** `tests/test_pages_smoke.py`, `README.md`
 - **Attenzione (scoperto in T9.1):** una pagina che contiene `st.page_link`
@@ -298,6 +298,16 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   tabella delle 6 competenze. Togliere dal README il link al deploy
   pubblico se non viene aggiornato.
 - **Verifica:** `python -m pytest -q` tutto verde; `flake8` senza errori.
+
+- **Esito (2026-10-24):** README riscritto (competenze del corso, avvio rapido
+  senza PostgreSQL, chatbot e Gemini, benchmark, struttura, limiti; tolto il
+  link al vecchio deploy pubblico, che non ha chatbot né ML). Screenshot in
+  `docs/screenshots/` (Home, ML, assistente, etica) presi con Chrome headless
+  via DevTools Protocol. Smoke test anche per le pagine 09 e 11 (245 test).
+  `flake8` pulito sui moduli d'esame con `.flake8` (E402 voluto nelle pagine,
+  righe lunghe nei prompt); il codice più vecchio ha ancora circa 220
+  segnalazioni di stile, non corrette per non toccare moduli funzionanti.
+  `requirements-dashboard.txt` con le dipendenze del chatbot.
 
 ### T10.2 ✅ (Facoltativo) Pulizia dei documenti storici
 - **Esito (2026-10-24, su richiesta dell'utente):** la wiki è stata spostata in

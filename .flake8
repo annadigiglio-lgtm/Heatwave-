@@ -1,0 +1,9 @@
+[flake8]
+max-line-length = 110
+exclude = .venv,__pycache__,.pytest_cache,data,models,output
+per-file-ignores =
+    # Le pagine Streamlit aggiungono la radice del progetto a sys.path prima degli import.
+    dashboard/pages/*.py:E402
+    dashboard/Home.py:E402
+    # Testi dei prompt: righe lunghe volute, sono frasi passate all'LLM.
+    src/chatbot/prompts.py:E501

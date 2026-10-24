@@ -181,6 +181,7 @@ def chiede_anno_futuro(domanda: str) -> bool:
     """Vero se la domanda nomina un anno successivo agli ultimi dati (es. 2030)."""
     return any(int(a) > ULTIMO_ANNO_DATI for a in _RE_ANNO_QUALSIASI.findall(domanda))
 
+
 _PATTERN_SANITARIO = [
     r'\bmedicin', r'\bfarmac', r'\bsintom', r'\bmedico\b', r'\bcolpo di calore\b', r'\bmalore\b',
     r'\bcurar', r'\bterapi', r'\bpillol', r'\bospedal', r'\bdevo prendere\b', r'\bmalattia\b',

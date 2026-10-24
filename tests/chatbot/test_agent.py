@@ -92,7 +92,6 @@ def router_fisso(monkeypatch):
     return imposta
 
 
-
 @pytest.fixture(autouse=True)
 def _ciclo_llm_senza_preselezione(monkeypatch):
     """I test del ciclo della lezione 20-03 fanno scegliere i tool all'LLM.
@@ -101,6 +100,7 @@ def _ciclo_llm_senza_preselezione(monkeypatch):
     riattivano con ``monkeypatch``.
     """
     monkeypatch.setattr(agent, '_preselezione_attiva', lambda: False)
+
 
 # --- Accettazione T6.1 ---------------------------------------------------------
 
@@ -750,4 +750,3 @@ def test_domande_sul_futuro_rifiutate_senza_llm(domanda):
 
 def test_anni_passati_restano_domande_sui_dati():
     assert instrada('Quante ondate di calore ci sono state a Novara nel 2003?') == 'dati'
-

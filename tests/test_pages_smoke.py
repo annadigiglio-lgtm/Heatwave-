@@ -40,3 +40,19 @@ def test_pagina_10_domanda_e_nuova_conversazione(pagina_10):
     at.sidebar.button[0].click().run()  # "Nuova conversazione"
     assert len(at.chat_message) == 0
     assert at.session_state['chat_history'] == []
+
+
+PAGINE = Path(__file__).resolve().parents[1] / 'dashboard' / 'pages'
+
+
+@pytest.mark.parametrize('file, titolo', [
+    ('09_machine_learning.py', 'Machine Learning'),
+    ('11_etica_e_limiti.py', 'Etica'),
+])
+def test_pagine_ml_ed_etica_si_aprono_senza_database(monkeypatch, file, titolo):
+    """Le pagine leggono solo Parquet e modelli: con un DB irraggiungibile devono aprirsi."""
+    monkeypatch.setenv('DB_HOST', '127.0.0.1')
+    monkeypatch.setenv('DB_PORT', '1')
+    at = AppTest.from_file(str(PAGINE / file), default_timeout=180).run()
+    assert not at.exception
+    assert titolo in at.title[0].value
