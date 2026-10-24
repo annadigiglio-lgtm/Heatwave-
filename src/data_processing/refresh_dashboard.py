@@ -3,7 +3,7 @@ refresh_dashboard.py - Rilancia le analisi e rigenera lo snapshot della
 dashboard, in un solo comando.
 
 Concatena i passi che gia' si lanciavano a mano dopo un aggiornamento dati
-(vedi wiki/pages/dashboard.md, sezione "Nessuna connessione DB live"):
+(vedi docs/pages/dashboard.md, sezione "Nessuna connessione DB live"):
 
     1. src/analysis/trend_analysis.py
     2. src/analysis/heatwave_stats.py

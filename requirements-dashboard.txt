@@ -4,7 +4,7 @@
 #
 # Sottoinsieme di requirements.txt: solo cio' che serve a
 # `streamlit run dashboard/Home.py` per leggere lo snapshot statico in
-# `data/dashboard_export/` (vedi wiki/pages/dashboard.md) - nessuna
+# `data/dashboard_export/` (vedi docs/pages/dashboard.md) - nessuna
 # connessione a Postgres/PostGIS. Pensato per Streamlit Community Cloud, dove
 # dipendenze pesanti con librerie di sistema (GDAL/rasterio, HDF5/netCDF4,
 # CDS API) rischiano di rallentare o far fallire l'installazione e non sono

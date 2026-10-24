@@ -18,7 +18,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 4. Nessuna chiave nel codice. Nessun test che usa rete, Ollama o PostgreSQL.
 5. Chiudere il task solo se il comando di **verifica** passa. Riportare
    l'output reale; se qualcosa fallisce, stato ⛔ con il motivo.
-6. A fine task: stato aggiornato qui, una riga in `wiki/log.md`, e le pagine
+6. A fine task: stato aggiornato qui, una riga in `docs/log.md`, e le pagine
    wiki toccate dal cambiamento aggiornate. Lo schema della pipeline in
    [roadmap-esame.md](roadmap-esame.md) si rigenera da solo (hook di Claude
    Code) quando questa pagina viene modificata con Edit/Write; se la modifichi
@@ -249,7 +249,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 - **Fare:** 20+ righe come in [Chatbot §8](chatbot.md).
   Le risposte attese si ricavano chiamando direttamente i tool.
 
-### T8.2 ⬜ Benchmark prompt v1 vs v2
+### T8.2 🔄 Benchmark prompt v1 vs v2
 - **Dipende da:** T6.1, T8.1 · **Corso:** lezione 12
 - **File:** `tests/chatbot/benchmark.py`, `output/chatbot_benchmark.csv`,
   tab "Valutazione" in pagina 10
@@ -299,10 +299,15 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   pubblico se non viene aggiornato.
 - **Verifica:** `python -m pytest -q` tutto verde; `flake8` senza errori.
 
-### T10.2 ⬜ (Facoltativo) Pulizia dei documenti storici
-- **Fare:** spostare `PROJECT_SUMMARY.md`, `SIMPLIFICATION_SUMMARY.md` e
-  `docs/*.md` in `docs/archivio/` con una nota "pianificazione originale,
-  non aggiornata". Solo su conferma dell'utente.
+### T10.2 ✅ (Facoltativo) Pulizia dei documenti storici
+- **Esito (2026-10-24, su richiesta dell'utente):** la wiki è stata spostata in
+  `docs/` (`docs/index.md`, `docs/pages/`, `docs/log.md`, con `git mv`, quindi la
+  cronologia è conservata). Eliminati i documenti di pianificazione obsoleti
+  (`docs/ARCHITECTURE.md`, `DATABASE.md`, `ETL.md`, `IMPLEMENTATION_GUIDE.md`,
+  `ROADMAP.md`, `PROJECT_SUMMARY.md`, `SIMPLIFICATION_SUMMARY.md`): citavano file
+  mai creati e numeri superati; tutto il contenuto valido era già nelle pagine.
+  Riferimenti aggiornati in codice, test, script della pipeline e README.
+  Indice RAG da ricostruire dopo il benchmark (le fonti cambiano percorso).
 
 ## F11 — Consegna
 

@@ -44,7 +44,7 @@ RISULTATO_ONDATE = {
 }
 CHUNK_FINTI = [
     {'testo': 'Il test di Mann-Kendall è non parametrico e verifica un trend monotono.',
-     'fonte': 'wiki/pages/statistical-analysis.md', 'sezione': 'Trend', 'similarita': 0.81,
+     'fonte': 'docs/pages/statistical-analysis.md', 'sezione': 'Trend', 'similarita': 0.81,
      'id': 'a#0'},
     {'testo': 'Open-Meteo è una rianalisi e sottostima la massima di circa 1,5 °C.',
      'fonte': 'data/knowledge_base/faq.md', 'sezione': 'Bias', 'similarita': 0.64, 'id': 'b#0'},
@@ -130,18 +130,18 @@ def test_a_domanda_dati_due_tool_poi_risposta(tool_finti, router_fisso):
 def test_b_domanda_metodo_nessun_tool_almeno_una_fonte(tool_finti, rag_finto, router_fisso):
     router_fisso('metodo')
     llm = FakeLLM(['Il Mann-Kendall è un test non parametrico di trend monotono. '
-                   'Fonti: [wiki/pages/statistical-analysis.md — Trend]'])
+                   'Fonti: [docs/pages/statistical-analysis.md — Trend]'])
 
     risposta = esegui_agente('Cos\'è il test di Mann-Kendall?', client=llm)
 
     assert risposta.percorso == 'metodo'
     assert risposta.tool_chiamati == [] and tool_finti == []
     assert len(risposta.fonti) >= 1
-    assert risposta.fonti[0] == {'fonte': 'wiki/pages/statistical-analysis.md',
+    assert risposta.fonti[0] == {'fonte': 'docs/pages/statistical-analysis.md',
                                  'sezione': 'Trend', 'similarita': 0.81}
     assert risposta.chiamate_llm == 1
     contenuto = llm.chiamate[0][-1]['content']
-    assert '[wiki/pages/statistical-analysis.md — Trend]' in contenuto  # contesto RAG nel prompt
+    assert '[docs/pages/statistical-analysis.md — Trend]' in contenuto  # contesto RAG nel prompt
     assert llm.chiamate[0][0]['content'] == prompts.SYSTEM_PROMPTS['v2']
     assert prompts.RICERCATORE_PROMPTS['v2'] in contenuto
 

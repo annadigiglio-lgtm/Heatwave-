@@ -3,7 +3,7 @@ heatwave_stats.py - Statistiche sulle Ondate di Calore
 
 Calcola `intensity_index` e `mean_temp` per le ondate identificate da
 `identify_heatwaves()` (lasciati NULL dalla funzione SQL, vedi
-wiki/pages/data-model.md) e produce statistiche aggregate per comune e
+docs/pages/data-model.md) e produce statistiche aggregate per comune e
 per anno.
 
 Usage:

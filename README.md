@@ -81,7 +81,7 @@ heatwave-piemonte/
 ├── dashboard/              # applicazione Streamlit (Home.py + pages/)
 ├── data/                   # dati grezzi, elaborati, esterni, snapshot per il deploy
 ├── tests/                  # test pytest
-├── wiki/                   # documentazione tecnica mantenuta aggiornata sessione per sessione
+├── docs/                   # documentazione (wiki): index.md, pages/, log.md
 ├── docs/                   # documenti di pianificazione originali (obiettivi iniziali del progetto)
 ├── config.yaml             # configurazione centrale
 └── requirements.txt        # dipendenze Python
@@ -126,12 +126,9 @@ pytest tests/ --cov=src.data_processing --cov=src.analysis --cov=src.utils.confi
 
 ## Documentazione
 
-La documentazione tecnica di dettaglio (schema dati, pipeline ETL, catalogo
-KPI, metodologia statistica) è mantenuta in [`wiki/`](wiki/index.md),
-aggiornata a ogni sessione di lavoro rilevante e tenuta sincronizzata con lo
-stato reale del codice. I documenti in `docs/` descrivono invece la
-pianificazione originale del progetto e non riflettono necessariamente lo
-stato attuale.
+La documentazione tecnica (architettura, dati, pipeline ETL, analisi,
+Machine Learning, chatbot, test, etica) è in [`docs/`](docs/index.md),
+mantenuta come wiki e tenuta sincronizzata con lo stato reale del codice.
 
 ## Limiti noti
 
@@ -164,5 +161,5 @@ Manager for Business Intelligence Software Developer.
 
 Open-Meteo, ARPA Piemonte, ISTAT, Copernicus (CORINE Land Cover, NDVI Global
 Land Service) — dettaglio completo con link in
-[wiki/pages/data-sources.md](wiki/pages/data-sources.md) e nella pagina
+[docs/pages/data-sources.md](docs/pages/data-sources.md) e nella pagina
 "Citazioni e Fonti" della dashboard.

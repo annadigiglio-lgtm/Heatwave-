@@ -4230,3 +4230,18 @@ dopo 75 minuti). Modelli "lite" con quota separata: scelto
 dedicato per la quota giornaliera. Benchmark (`tests/chatbot/benchmark.py`,
 criteri oggettivi, 5 test) da eseguire su Ollama. Pagina 10: tab Valutazione
 con metriche e grafico v1 contro v2. 237 test passano.
+
+# 2026-10-24 — wiki spostata in docs/, documenti obsoleti eliminati
+
+Su richiesta dell'utente la wiki diventa la documentazione del progetto in
+`docs/`: `docs/index.md`, `docs/log.md`, `docs/pages/*.md`, `docs/.obsidian`
+(spostati con `git mv`). Rimossi `wiki/HEATWAVE-WIKI` (configurazione Obsidian
+vuota) e i documenti di pianificazione obsoleti `docs/ARCHITECTURE.md`,
+`DATABASE.md`, `ETL.md`, `IMPLEMENTATION_GUIDE.md`, `ROADMAP.md`,
+`PROJECT_SUMMARY.md`, `SIMPLIFICATION_SUMMARY.md` (file mai creati, 1.7M record
+invece dei 5,8 M reali; il contenuto valido era già nelle pagine). Aggiornati i
+riferimenti in 38 file (codice, test, test set, script della pipeline, RAG,
+README, CLAUDE.md); i link alle lezioni del corso restano validi. Pagine
+aggiornate: index, architecture (niente più "da fare"), chatbot (stato),
+testing (237 test per file). Indice RAG da ricostruire dopo il benchmark in
+corso.

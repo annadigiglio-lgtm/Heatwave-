@@ -114,7 +114,7 @@ ml:
   models_dir: "./models"
 
 # --- CHATBOT (assistente climatico: LLM + agenti + RAG) ---
-# Specifica completa in wiki/pages/chatbot.md
+# Specifica completa in docs/pages/chatbot.md
 chatbot:
   provider: "gemini"            # gemini (veloce, GOOGLE_API_KEY) | ollama (locale, lento su CPU) | anthropic (ANTHROPIC_API_KEY)
   model: "qwen2.5:7b"           # alternativa leggera: llama3.2

@@ -36,7 +36,7 @@ Scelte legate alle prestazioni (qwen2.5:7b su CPU, 6-12 s per chiamata):
 - **Revisore in Python**: il secondo passaggio LLM parte solo se il
   controllo fallisce; se anche la correzione non basta si aggiunge un avviso.
 
-Privacy (wiki/pages/etica-e-limiti.md): nei log non finisce mai il testo
+Privacy (docs/pages/etica-e-limiti.md): nei log non finisce mai il testo
 dell'utente, solo la lunghezza, il percorso e i nomi dei tool.
 
 Avanzamento e streaming per la pagina Streamlit (lezione 14-05):

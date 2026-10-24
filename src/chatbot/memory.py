@@ -7,7 +7,7 @@ prompt (su CPU ogni token in più costa tempo) si tengono solo gli ultimi
 dell'assistente; ``finestra`` di default è ``chatbot.memory_window``.
 
 La memoria vive solo in ``st.session_state`` (``to_list()`` / ``from_list()``)
-e non viene mai salvata su disco (wiki/pages/etica-e-limiti.md). Il riassunto
+e non viene mai salvata su disco (docs/pages/etica-e-limiti.md). Il riassunto
 automatico degli scambi vecchi (lezione 15-04) non serve: le domande del
 chatbot sono brevi e quasi indipendenti tra loro.
 """

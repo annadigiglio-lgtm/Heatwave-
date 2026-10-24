@@ -1,9 +1,13 @@
-# Indice — Wiki Heatwave Piemonte (versione d'esame)
+# Documentazione — Heatwave Piemonte (versione d'esame)
 
-Wiki operativa per il progetto finale ITS. Descrive lo stato **reale** del
-codice: se qualcosa non coincide, prevalgono codice, `sql/` e `config.yaml`.
-I documenti in `docs/`, `PROJECT_SUMMARY.md` e `SIMPLIFICATION_SUMMARY.md`
-sono la pianificazione originale e non sono aggiornati.
+Questa cartella `docs/` è la documentazione del progetto, mantenuta come wiki
+(si apre anche con Obsidian). Descrive lo stato **reale** del codice: se
+qualcosa non coincide, prevalgono codice, `sql/` e `config.yaml`.
+
+Dal 2026-10-24 la wiki ha sostituito i vecchi documenti di pianificazione
+(`docs/ARCHITECTURE.md`, `DATABASE.md`, `ETL.md`, `IMPLEMENTATION_GUIDE.md`,
+`ROADMAP.md`, `PROJECT_SUMMARY.md`, `SIMPLIFICATION_SUMMARY.md`), che
+descrivevano uno stato mai raggiunto e restano solo nella cronologia git.
 
 ## Da dove partire
 
@@ -26,13 +30,13 @@ sono la pianificazione originale e non sono aggiornati.
 ## Analisi, ML e AI
 
 - [Analisi statistica](pages/statistical-analysis.md) — trend, STL, Moran's I, regressione spaziale, ARPA
-- [Machine Learning](pages/machine-learning.md) — K-Means (fatto), regressione supervisionata e PCA (da fare)
-- [Chatbot](pages/chatbot.md) — specifica di assistente con agenti, tool e RAG
+- [Machine Learning](pages/machine-learning.md) — K-Means con PCA, regressione supervisionata (Linear, RandomForest, MLP) con KFold e GroupKFold
+- [Chatbot](pages/chatbot.md) — agente multi-ruolo con 6 tool, RAG, memoria; Gemini con riserva Ollama, cache, benchmark
 
 ## Applicazione e qualità
 
 - [Dashboard e mappe](pages/dashboard.md) — pagine Streamlit, componenti, QGIS
-- [Test](pages/testing.md) — suite attuale e test da aggiungere
+- [Test](pages/testing.md) — suite pytest (dati, analisi, ML, chatbot, pagine) e benchmark del chatbot
 - [Etica e limiti](pages/etica-e-limiti.md) — testi per la pagina 11, il README e le slide
 - [Glossario](pages/concepts.md) — statistica, ML, LLM, RAG: definizioni per l'orale
 

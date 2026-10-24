@@ -116,7 +116,7 @@ class DatabaseLoader:
         non per comune: ogni riga viene associata al comune capoluogo di
         provincia (unico comune per cui esiste davvero una misura). Gli
         altri comuni della provincia restano senza dati di temperatura —
-        vedi [ETL](../../wiki/pages/etl-pipeline.md) per la motivazione.
+        vedi [ETL](../../docs/pages/etl-pipeline.md) per la motivazione.
         """
         import pandas as pd
         from psycopg2.extras import execute_values

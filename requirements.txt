@@ -6,7 +6,7 @@
 pandas==3.0.3
 numpy==2.4.6
 scipy==1.17.1
-pyarrow==24.0.0  # export_dashboard_data.py (dashboard senza DB live, vedi wiki/pages/dashboard.md)
+pyarrow==24.0.0  # export_dashboard_data.py (dashboard senza DB live, vedi docs/pages/dashboard.md)
 
 # --- Database ---
 sqlalchemy==2.0.50
@@ -45,11 +45,11 @@ folium==0.20.0
 streamlit==1.58.0
 streamlit-folium==0.27.2
 
-# --- Chatbot: LLM, agenti e RAG (wiki/pages/chatbot.md) ---
+# --- Chatbot: LLM, agenti e RAG (docs/pages/chatbot.md) ---
 # Embedding del RAG calcolati da Ollama (bge-m3) e indice vettoriale in
 # numpy + scikit-learn: ChromaDB e sentence-transformers sono esclusi perche'
 # Smart App Control di Windows blocca le loro librerie compilate
-# (orjson, torch, regex) - vedi wiki/pages/chatbot.md.
+# (orjson, torch, regex) - vedi docs/pages/chatbot.md.
 ollama==0.6.3
 anthropic==1.12.1  # provider facoltativo, chiave solo da .env
 google-genai==2.29.0  # provider Gemini (lezione 13), chiave GOOGLE_API_KEY in .env

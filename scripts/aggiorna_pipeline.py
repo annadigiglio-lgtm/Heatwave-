@@ -1,10 +1,10 @@
 """
 aggiorna_pipeline.py - Rigenera lo stato della pipeline d'esame nella wiki.
 
-Legge gli stati dei task in `wiki/pages/todo-agenti.md` (intestazioni
+Legge gli stati dei task in `docs/pages/todo-agenti.md` (intestazioni
 `### T<fase>.<n> <stato> <titolo>`, con stato ✅ ⬜ 🔄 ⛔) e riscrive il blocco
 compreso tra i marcatori `<!-- PIPELINE:START -->` e `<!-- PIPELINE:END -->`
-in `wiki/pages/roadmap-esame.md`: schema con lo stato di ogni fase,
+in `docs/pages/roadmap-esame.md`: schema con lo stato di ogni fase,
 avanzamento complessivo, tabella dei task e task pronti da avviare (tutte le
 dipendenze ✅).
 
@@ -26,8 +26,8 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TODO = ROOT / 'wiki' / 'pages' / 'todo-agenti.md'
-ROADMAP = ROOT / 'wiki' / 'pages' / 'roadmap-esame.md'
+TODO = ROOT / 'docs' / 'pages' / 'todo-agenti.md'
+ROADMAP = ROOT / 'docs' / 'pages' / 'roadmap-esame.md'
 START, END = '<!-- PIPELINE:START -->', '<!-- PIPELINE:END -->'
 
 FATTO, DA_FARE, IN_CORSO, BLOCCATO = '✅', '⬜', '🔄', '⛔'
@@ -190,7 +190,7 @@ def main() -> int:
         except json.JSONDecodeError:
             return 0
         percorso = (evento.get('tool_input') or {}).get('file_path', '')
-        if not percorso.replace('\\', '/').endswith('wiki/pages/todo-agenti.md'):
+        if not percorso.replace('\\', '/').endswith('docs/pages/todo-agenti.md'):
             return 0
         print(json.dumps({'systemMessage': aggiorna()}, ensure_ascii=False))
         return 0

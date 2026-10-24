@@ -5,8 +5,8 @@ Nessuna connessione a Postgres: tutti i dati (Open-Meteo, ARPA, risultati di
 `src/analysis/*.py`) vengono letti da uno snapshot statico in
 `data/dashboard_export/` (Parquet + un JSON), prodotto da
 `src/data_processing/export_dashboard_data.py` e tracciato in Git - vedi
-wiki/pages/dashboard.md per il perché (deploy pubblico senza DB live) e
-wiki/pages/statistical-analysis.md per i risultati di `src/analysis/`.
+docs/pages/dashboard.md per il perché (deploy pubblico senza DB live) e
+docs/pages/statistical-analysis.md per i risultati di `src/analysis/`.
 
 Da rilanciare `export_dashboard_data.py` e ricaricare la dashboard dopo ogni
 aggiornamento dei dati in locale: qui non c'è mai una query live.
@@ -38,7 +38,7 @@ def _export_path(filename: str) -> Path:
 # groupby/isin restano invariati (pandas 3 li gestisce in modo trasparente
 # anche misti a colonne str, verificato). Necessario su Streamlit Community
 # Cloud (limite RAM ~1GB): con 599 comuni i precalcolati superano 750MB
-# senza queste riduzioni, a ridosso del limite - vedi wiki/log.md 2026-07-24.
+# senza queste riduzioni, a ridosso del limite - vedi docs/log.md 2026-07-24.
 
 def _shrink_memory(df: pd.DataFrame) -> pd.DataFrame:
     float_cols = df.select_dtypes(include='float64').columns
@@ -109,7 +109,7 @@ def get_combined_trend_analysis() -> pd.DataFrame:
     Trend per **tutti** i comuni con dati reali, unendo le due fonti invece
     di limitarsi a Open-Meteo: i 599 comuni Open-Meteo usano il trend
     Open-Meteo (fonte più validata finora, vedi
-    wiki/pages/statistical-analysis.md), i comuni **solo ARPA** (nessun
+    docs/pages/statistical-analysis.md), i comuni **solo ARPA** (nessun
     dato Open-Meteo) usano il trend ARPA calcolato al volo
     (`get_arpa_trend_analysis()`) - nessuna doppia conta: ogni comune
     compare una sola volta, con un'unica fonte. Colonna `source` aggiunta
@@ -194,7 +194,7 @@ def get_daily_temperature_aggregate(municipality_names: tuple) -> pd.DataFrame:
     Temporale. È una media aritmetica non pesata per popolazione/superficie
     dei soli comuni con dati reali passati in `municipality_names`, non una
     stima ufficiale della temperatura regionale (vedi
-    wiki/pages/etl-pipeline.md per la granularità reale dei dati).
+    docs/pages/etl-pipeline.md per la granularità reale dei dati).
     """
     daily = _load_temperature_daily_all()
     subset = daily[daily['municipality_name'].isin(municipality_names)]
@@ -456,7 +456,7 @@ def get_n_municipalities_both_sources() -> int:
     dall'intersezione reale dei due elenchi invece di un numero scritto a
     mano, che altrimenti va aggiornato manualmente in testo statico a ogni
     estensione della copertura (era successo con "108", stale dopo
-    l'estensione a 599/218 del 2026-07-23 - vedi wiki/log.md).
+    l'estensione a 599/218 del 2026-07-23 - vedi docs/log.md).
     """
     om_names = set(get_municipality_names_with_data())
     arpa_names = set(get_arpa_municipality_names_with_data())

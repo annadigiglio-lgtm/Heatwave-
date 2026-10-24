@@ -1,6 +1,6 @@
 -- ============================================================================
 -- HEATWAVE PIEMONTE - Uso del suolo (CORINE Land Cover)
--- Aggiunta 2026-07-16 per il paper scientifico (vedi wiki/pages/paper-scientifico.md)
+-- Aggiunta 2026-07-16 per il paper scientifico (vedi docs/pages/paper-scientifico.md)
 -- ============================================================================
 
 -- Percentuali di uso del suolo per comune, aggregate alle 5 categorie di

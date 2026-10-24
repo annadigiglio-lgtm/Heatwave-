@@ -1,6 +1,6 @@
 # Chatbot "Assistente climatico" — specifica
 
-**Stato**: da implementare (fasi F3–F8 della [Pipeline d'esame](roadmap-esame.md)).
+**Stato**: implementato e provato con modelli reali (fasi F3–F7 chiuse); benchmark F8 in corso. Vedi [Pipeline d'esame](roadmap-esame.md).
 **Riferimenti del corso** (cartella `../../../../wiki/`): lezione 13 (API LLM,
 wrapper universale, Streamlit chat), 15 (memoria, personalità, guardrail),
 11–12 (prompt e valutazione), 20 (agenti e tool use), 21 (RAG, embedding,
@@ -136,7 +136,7 @@ eseguire solo funzioni presenti lì (come nella lezione 20-03).
 
 ## 3. RAG (`rag.py`, `build_knowledge_base.py`) — lezione 21
 
-- **Corpus**: `wiki/pages/*.md` (esclusi `todo-agenti.md` e `roadmap-esame.md`,
+- **Corpus**: `docs/pages/*.md` (esclusi `todo-agenti.md` e `roadmap-esame.md`,
   liste di lavoro), `paper/references/README.md`, `data/knowledge_base/*.md`.
   Escluso `paper/manoscritto.md`: bozza fuori ambito con numeri superati. I PDF in
   `paper/references/` restano facoltativi (si possono aggiungere con `pypdf`).

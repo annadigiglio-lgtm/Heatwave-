@@ -8,7 +8,7 @@ sceglierle indipendentemente pagina per pagina.
 
 # Comuni capoluogo di provincia (nome del comune, non della provincia:
 # "Verbano-Cusio-Ossola" ha come capoluogo "Verbania" - vedi
-# wiki/pages/etl-pipeline.md).
+# docs/pages/etl-pipeline.md).
 CAPOLUOGHI = {
     "Alessandria", "Asti", "Biella", "Cuneo",
     "Novara", "Torino", "Verbania", "Vercelli",
@@ -102,7 +102,7 @@ THEME_HOT = ALERT_COLOR
 THEME_HOT_DEEP = "#c0392b"
 
 # Grigio ardesia (non nero puro): scelta dopo un giro di feedback sul mockup
-# della Home ("sfondo troppo nero"), vedi wiki/log.md 2026-07-17.
+# della Home ("sfondo troppo nero"), vedi docs/log.md 2026-07-17.
 # THEME_INK_SIDEBAR non è consumato da nessun modulo Python: esiste solo come
 # riferimento per chi tocca `.streamlit/config.toml` (deve restare allineato a
 # [theme.dark.sidebar].backgroundColor).
@@ -117,7 +117,7 @@ THEME_INK_SIDEBAR = "#161a26"
 # variante invece di un unico set fisso — prima del 2026-07-18 il tema
 # chiaro nativo di Streamlit veniva applicato ma questi pannelli restavano
 # sempre scuri, risultando in un tema "chiaro" fatto solo di sfondo bianco +
-# blocchi neri fuori posto (segnalato dall'utente, vedi wiki/log.md
+# blocchi neri fuori posto (segnalato dall'utente, vedi docs/log.md
 # 2026-07-18). Selezionati a runtime in `styling.py` via
 # `st.context.theme.type`.
 THEME_TOKENS = {
@@ -175,7 +175,7 @@ FONT_MONO = "'JetBrains Mono', ui-monospace, 'Cascadia Code', 'SFMono-Regular', 
 MAP_TILES = "CartoDB positron"
 
 # Uso del suolo (CORINE Land Cover, vedi municipality_land_cover e
-# wiki/pages/data-sources.md): colori vicini alla palette ufficiale CLC per
+# docs/pages/data-sources.md): colori vicini alla palette ufficiale CLC per
 # ciascuna categoria di Livello 1 (presa da data/external/clc_legend.csv,
 # colore della classe più rappresentativa di ciascun gruppo), non una
 # palette inventata - così una mappa di uso del suolo qui si legge in modo
@@ -198,7 +198,7 @@ LAND_COVER_LABELS = {
 }
 
 # NDVI (verde da satellite, Copernicus Global Land Service - vedi
-# municipality_ndvi e wiki/pages/data-sources.md): gradiente marrone/sabbia
+# municipality_ndvi e docs/pages/data-sources.md): gradiente marrone/sabbia
 # -> verde, convenzione standard per la visualizzazione NDVI (basso =
 # suolo nudo/vegetazione rada, alto = vegetazione densa) - diversa
 # deliberatamente dalla scala blu->rosso di temperatura/trend, per non

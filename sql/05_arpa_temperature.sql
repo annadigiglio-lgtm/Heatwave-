@@ -1,12 +1,12 @@
 -- ============================================================================
 -- HEATWAVE PIEMONTE - ARPA_TEMPERATURE (osservazioni di stazione reali)
 -- Aggiunta 2026-07-18 per la validazione delle stime Open-Meteo (fase 1 del
--- piano paper, vedi wiki/pages/paper-scientifico.md)
+-- piano paper, vedi docs/pages/paper-scientifico.md)
 -- ============================================================================
 
 -- Temperature giornaliere osservate da stazioni ARPA Piemonte (non dati di
 -- rianalisi/modello come `temperature`), usate per validare le stime
--- Open-Meteo sullo stesso (comune, data). Vedi wiki/pages/data-sources.md e
+-- Open-Meteo sullo stesso (comune, data). Vedi docs/pages/data-sources.md e
 -- src/data_acquisition/download_arpa.py.
 CREATE TABLE IF NOT EXISTS arpa_temperature (
     arpa_temperature_id BIGSERIAL PRIMARY KEY,

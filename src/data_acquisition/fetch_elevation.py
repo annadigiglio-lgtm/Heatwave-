@@ -2,7 +2,7 @@
 fetch_elevation.py - Popola municipalities.elevation_m per i comuni con dati reali.
 
 `elevation_m` esiste nello schema (`sql/01_init_database.sql`) ma non era mai
-stato popolato (NULL per tutti i 1180 comuni) - vedi wiki/pages/project-status.md.
+stato popolato (NULL per tutti i 1180 comuni) - vedi docs/pages/project-status.md.
 Usato dalla pagina "Analisi Spaziale" della dashboard per il confronto per
 fascia altitudinale (pianura/collina/montagna).
 

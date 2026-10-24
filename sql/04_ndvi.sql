@@ -1,6 +1,6 @@
 -- ============================================================================
 -- HEATWAVE PIEMONTE - NDVI (verde da satellite, Copernicus Global Land Service)
--- Aggiunta 2026-07-17 per il paper scientifico (vedi wiki/pages/paper-scientifico.md)
+-- Aggiunta 2026-07-17 per il paper scientifico (vedi docs/pages/paper-scientifico.md)
 -- ============================================================================
 
 -- NDVI (Normalized Difference Vegetation Index) medio per comune, da un

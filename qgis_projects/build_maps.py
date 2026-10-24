@@ -1,5 +1,5 @@
 """
-build_maps.py - Genera i progetti QGIS pianificati (vedi wiki/pages/dashboard.md)
+build_maps.py - Genera i progetti QGIS pianificati (vedi docs/pages/dashboard.md)
 
 Esegue con l'interprete Python bundled di QGIS (PyQGIS), non con il venv
 del progetto:
@@ -13,7 +13,7 @@ Genera:
     - qgis_projects/previews/*.png (render offscreen per verifica)
 
 Nota di granularità: solo 8 comuni su 1180 hanno temperature reali (vedi
-wiki/pages/etl-pipeline.md). I 1180 comuni ISTAT sono mostrati come sfondo
+docs/pages/etl-pipeline.md). I 1180 comuni ISTAT sono mostrati come sfondo
 grigio di contesto; gli 8 con dati reali sono evidenziati a colori sopra.
 """
 

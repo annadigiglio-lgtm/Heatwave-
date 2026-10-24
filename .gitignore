@@ -69,7 +69,7 @@ results/
 data/external/ndvi/
 
 # Streamlit (ignora tutto tranne il tema, che deve essere pubblicato per il
-# deploy - vedi wiki/log.md 2026-07-24: senza config.toml il sito live
+# deploy - vedi docs/log.md 2026-07-24: senza config.toml il sito live
 # usa il tema nero di default di Streamlit invece del blu personalizzato)
 .streamlit/*
 !.streamlit/config.toml

@@ -1,7 +1,7 @@
 """
 11_etica_e_limiti.py - Etica, privacy e limiti del progetto.
 
-Trasforma in pagina il testo di riferimento `wiki/pages/etica-e-limiti.md`:
+Trasforma in pagina il testo di riferimento `docs/pages/etica-e-limiti.md`:
 cosa il progetto è e non è, limiti dei dati e dei modelli ML, uso
 responsabile del chatbot, richiamo prudente ad AI Act e GDPR (lezione 10
 del corso). I conteggi dei comuni vengono dallo snapshot
@@ -37,7 +37,7 @@ try:
     n_arpa = arpa_stats['n_arpa_municipalities']
     year_start = stats['date_start'].year
 except (FileNotFoundError, OSError, KeyError):
-    # Valori di wiki/pages/etica-e-limiti.md se lo snapshot non è disponibile
+    # Valori di docs/pages/etica-e-limiti.md se lo snapshot non è disponibile
     n_total, n_openmeteo, n_arpa, year_start = 1180, 599, 218, 2000
 
 st.title("⚖️ Etica, privacy e limiti")
@@ -219,7 +219,7 @@ with tab_rules:
 
 st.divider()
 st.caption(
-    "Fonti: wiki/pages/etica-e-limiti.md; lezione 10 del corso (Applicazioni AI, "
+    "Fonti: docs/pages/etica-e-limiti.md; lezione 10 del corso (Applicazioni AI, "
     "etica e normativa). L'elenco completo delle fonti dati è nella pagina "
     "Citazioni e Fonti."
 )

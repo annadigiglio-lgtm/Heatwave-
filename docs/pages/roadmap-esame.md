@@ -30,7 +30,7 @@ Bonus già presenti o previsti: test automatici, documentazione curata.
 ## Schema della pipeline (stato attuale)
 
 <!-- PIPELINE:START -->
-_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 13:14: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
+_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 15:04: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
 
 **Avanzamento:** 15/18 task obbligatori (83%) `████████░░`
 
@@ -67,16 +67,14 @@ Legenda: ✅ fatta · 🔄 in corso · ▶️ pronta da avviare · ⬜ in attesa
 | F5 Tool dati controllati | ✅ | T5.1 ✅ |
 | F6 Agente | ✅ | T6.1 ✅ |
 | F7 Pagina Streamlit "Assistente climatico" | ✅ | T7.1 ✅ |
-| F8 Valutazione del chatbot | 🔄 | T8.1 ✅ · T8.2 ⬜ |
-| F10 Qualità | ⬜ | T10.1 ⬜ · T10.2 ⬜ *(facolt.)* |
+| F8 Valutazione del chatbot | 🔄 | T8.1 ✅ · T8.2 🔄 |
+| F10 Qualità | ⬜ | T10.1 ⬜ · T10.2 ✅ *(facolt.)* |
 | F11 Consegna e demo | ⬜ | T11.1 ⬜ |
 
 **Task pronti da avviare** (dipendenze tutte ✅, eseguibili in parallelo):
 
 - T2.3 — (Facoltativo) Modello del bias Open-Meteo vs ARPA
-- T8.2 — Benchmark prompt v1 vs v2
 - T10.1 — Test, lint, README
-- T10.2 — (Facoltativo) Pulizia dei documenti storici
 <!-- PIPELINE:END -->
 
 Le fasi sullo stesso livello sono **indipendenti** e possono essere
@@ -129,7 +127,7 @@ nuovi verdi.
 **Cancello:** test del client con mock verdi, nessuna chiamata di rete nei test.
 
 ### F4 — RAG sulla documentazione
-- Knowledge base: `wiki/pages/*.md`, `paper/manoscritto.md`,
+- Knowledge base: `docs/pages/*.md`, `paper/manoscritto.md`,
   `paper/references/README.md`, schede curate in `data/knowledge_base/`.
 - Chunking per sezione Markdown (circa 300 parole, sovrapposizione 50).
 - Embedding multilingue `bge-m3` calcolati da Ollama; indice vettoriale numpy
@@ -197,6 +195,6 @@ nella pagina del chatbot.
 - Nessuna chiave API nel codice; tutto da `.env` via `src/utils/config.py`.
 - Nessun test usa rete, Ollama o PostgreSQL: si usano mock e dati sintetici.
 - Dopo ogni fase: aggiornare [Stato del progetto](project-status.md),
-  [To-do per agenti](todo-agenti.md) e una riga in `wiki/log.md`.
+  [To-do per agenti](todo-agenti.md) e una riga in `docs/log.md`.
 - Durante la demo non si scaricano dati e non si riaddestrano modelli:
   tutto è preparato prima.

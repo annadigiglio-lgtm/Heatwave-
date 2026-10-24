@@ -14,7 +14,7 @@ Una vista reale, non una subquery inline nel progetto QGIS: il provider
 Postgres di QGIS tratta le subquery `(SELECT ...) AS alias` passate come
 `table=` in QgsDataSourceUri come un identificatore letterale (le mette
 tra virgolette per intero), non come SQL da eseguire — vedi
-build_maps.py e wiki/pages/dashboard.md per il dettaglio del bug.
+build_maps.py e docs/pages/dashboard.md per il dettaglio del bug.
 """
 
 from sqlalchemy import text

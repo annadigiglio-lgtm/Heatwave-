@@ -52,7 +52,7 @@ SEZIONE_INIZIALE = 'Introduzione'
 
 # Fonti del corpus, relative alla radice del progetto (niente PDF).
 PATTERN_CORPUS = (
-    'wiki/pages/*.md',
+    'docs/pages/*.md',
     'paper/references/README.md',
     'data/knowledge_base/*.md',
 )
@@ -63,8 +63,8 @@ PATTERN_CORPUS = (
 # ("ondate", "cluster", "RAG", "ARPA") e finirebbero spesso in cima al
 # retrieval al posto delle pagine che spiegano davvero i concetti.
 FONTI_ESCLUSE = frozenset({
-    'wiki/pages/todo-agenti.md',
-    'wiki/pages/roadmap-esame.md',
+    'docs/pages/todo-agenti.md',
+    'docs/pages/roadmap-esame.md',
 })
 # `paper/manoscritto.md` non fa parte del corpus: è una bozza dell'articolo
 # scientifico, fuori dall'ambito d'esame, e contiene numeri di versioni
@@ -123,7 +123,7 @@ def _percorso_progetto(percorso: str | Path) -> Path:
 def leggi_corpus(root: str | Path | None = None) -> list[Documento]:
     """Legge i documenti Markdown del corpus RAG.
 
-    Fonti: ``wiki/pages/*.md``,
+    Fonti: ``docs/pages/*.md``,
     ``paper/references/README.md`` e ``data/knowledge_base/*.md`` (se la
     cartella esiste). Sono escluse le pagine operative in ``FONTI_ESCLUSE``
     (``todo-agenti.md``, ``roadmap-esame.md``): servono agli agenti che

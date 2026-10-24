@@ -49,7 +49,7 @@ n_years = stats['date_end'].year - stats['date_start'].year + 1
 # Copertura combinata: unione dei comuni Open-Meteo (599) e ARPA (218),
 # tutti e 218 in comune a entrambe (copertura ARPA completa dal 2026-07-23)
 # - non una somma ingenua (599+218), che conterebbe due volte quei 218.
-# Vedi wiki/pages/dashboard.md.
+# Vedi docs/pages/dashboard.md.
 combined_trend_df = get_combined_trend_analysis()
 n_municipalities_combined = combined_trend_df['municipality_name'].nunique() if not combined_trend_df.empty else 0
 n_rows_combined = stats['n_temperature_rows'] + arpa_stats['n_arpa_rows']
@@ -71,7 +71,7 @@ render_hero(
 )
 
 st.subheader("Esplora la dashboard")
-CARD_HEIGHT = 280  # altezza fissa: senza, ogni card si dimensiona sul proprio testo (vedi wiki/log.md 2026-07-16)
+CARD_HEIGHT = 280  # altezza fissa: senza, ogni card si dimensiona sul proprio testo (vedi docs/log.md 2026-07-16)
 card1, card2, card3 = st.columns(3)
 with card1:
     with st.container(key="navcard-temporale", height=CARD_HEIGHT):

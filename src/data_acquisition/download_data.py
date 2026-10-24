@@ -282,7 +282,7 @@ class ArpaPiemonteDownloader:
     `src/data_acquisition/download_arpa.py`, che usa la vera API REST
     pubblica di ARPA Piemonte (`utility.arpa.piemonte.it/meteoidro/`).
     Questa classe resta cosi' com'era, non funzionante, per riferimento
-    storico - vedi wiki/pages/data-sources.md.
+    storico - vedi docs/pages/data-sources.md.
     """
 
     def __init__(self):

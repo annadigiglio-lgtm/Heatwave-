@@ -1,7 +1,7 @@
 # Architettura
 
 **Sorgenti**: struttura del repository, `config.yaml`, `src/`, `dashboard/`,
-`sql/`. Le parti marcate *(da fare)* sono descritte in
+`sql/`. Stato delle attività in
 [Pipeline d'esame](roadmap-esame.md).
 
 ## Tre livelli
@@ -19,16 +19,16 @@
         ▼
    src/data_processing/refresh_dashboard.py  ──►  data/dashboard_export/*.parquet
 
-2. CONOSCENZA PER IL CHATBOT  (da fare)
-   wiki/pages · paper/manoscritto.md · data/knowledge_base/
+2. CONOSCENZA PER IL CHATBOT
+   docs/pages · paper/references/README.md · data/knowledge_base/
         │  src/chatbot/build_knowledge_base.py
         ▼
    indice vettoriale numpy  (data/vector_store/, embedding bge-m3 via Ollama)
 
 3. APPLICAZIONE (Streamlit, nessuna connessione al database)
    dashboard/Home.py + pages/02…09   ◄── Parquet + models/
-   pages/10_assistente_climatico.py  ◄── src/chatbot/  (da fare)
-   pages/11_etica_e_limiti.py        (da fare)
+   pages/10_assistente_climatico.py  ◄── src/chatbot/
+   pages/11_etica_e_limiti.py
 ```
 
 **Decisione:** PostgreSQL/PostGIS è lo storage primario e serve a ETL,
@@ -36,7 +36,7 @@ analisi e training. L'app legge solo lo snapshot Parquet e i modelli
 salvati: così la demo funziona anche con il database spento, ed è la stessa
 fonte dati per dashboard e chatbot.
 
-## Chatbot: componenti *(da fare)*
+## Chatbot: componenti
 
 ```text
 domanda utente
@@ -52,7 +52,7 @@ agent.py ── Router ──┬── Analista dati ── tools.py ── Parq
    ▼
 Revisore (controlla numeri e fonti)  ──►  risposta + fonti + traccia tool
    │
-llm_client.py  (Ollama locale · Anthropic opzionale)
+llm_client.py  (Gemini 3.1 Flash Lite → riserva automatica Ollama · Anthropic opzionale)
 prompts.py     (system prompt v1 / v2)
 ```
 
@@ -66,8 +66,8 @@ Dettagli in [Chatbot](chatbot.md).
 | `src/data_processing/` | `clean_data.py` (DataCleaner), `export_dashboard_data.py`, `refresh_dashboard.py` |
 | `src/database/` | caricamento in PostgreSQL |
 | `src/analysis/` | statistica temporale e spaziale, validazione ARPA |
-| `src/machine_learning/` | Pipeline K-Means; regressore *(da fare)* |
-| `src/chatbot/` | *(da fare)* client LLM, RAG, tool, agente, memoria, prompt |
+| `src/machine_learning/` | Pipeline K-Means e regressore della temperatura (Linear, RandomForest, MLP) |
+| `src/chatbot/` | client LLM (Gemini con riserva Ollama), RAG, 6 tool, agente, memoria, prompt, cache delle risposte |
 | `src/utils/` | `config.py`, `database.py`, `logger.py` |
 | `dashboard/` | app Streamlit multipagina, `components/` condivisi |
 | `models/` | modelli `joblib` + metadati JSON |

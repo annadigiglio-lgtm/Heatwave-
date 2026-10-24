@@ -72,9 +72,9 @@ def _scrivi(percorso: Path, testo: str) -> None:
 @pytest.fixture
 def corpus(tmp_path):
     """Mini-progetto con wiki, pagine escluse (operative e manoscritto) e knowledge base."""
-    _scrivi(tmp_path / 'wiki' / 'pages' / 'data-sources.md', PAGINA_WIKI)
-    _scrivi(tmp_path / 'wiki' / 'pages' / 'todo-agenti.md', TODO)
-    _scrivi(tmp_path / 'wiki' / 'pages' / 'roadmap-esame.md', TODO)
+    _scrivi(tmp_path / 'docs' / 'pages' / 'data-sources.md', PAGINA_WIKI)
+    _scrivi(tmp_path / 'docs' / 'pages' / 'todo-agenti.md', TODO)
+    _scrivi(tmp_path / 'docs' / 'pages' / 'roadmap-esame.md', TODO)
     _scrivi(tmp_path / 'paper' / 'manoscritto.md',
             '# Manoscritto\n\n## Abstract\n\nLe ondate di calore in Piemonte aumentano '
             'di frequenza e intensità nelle pianure del sud della regione.\n')
@@ -100,17 +100,17 @@ def cache_pulita():
 def test_leggi_corpus_esclude_pagine_operative_e_pdf(corpus):
     fonti = [d.fonte for d in leggi_corpus(corpus)]
     assert fonti == [
-        'wiki/pages/data-sources.md',
+        'docs/pages/data-sources.md',
         'data/knowledge_base/faq.md',
     ]
     assert 'paper/manoscritto.md' not in fonti
-    assert 'wiki/pages/todo-agenti.md' not in fonti
+    assert 'docs/pages/todo-agenti.md' not in fonti
     assert not any(f.endswith('.pdf') for f in fonti)
 
 
 def test_leggi_corpus_senza_knowledge_base(tmp_path):
-    _scrivi(tmp_path / 'wiki' / 'pages' / 'a.md', '# A\n\ntesto')
-    assert [d.fonte for d in leggi_corpus(tmp_path)] == ['wiki/pages/a.md']
+    _scrivi(tmp_path / 'docs' / 'pages' / 'a.md', '# A\n\ntesto')
+    assert [d.fonte for d in leggi_corpus(tmp_path)] == ['docs/pages/a.md']
 
 
 def test_documento_ha_hash_e_titolo(corpus):
@@ -122,7 +122,7 @@ def test_documento_ha_hash_e_titolo(corpus):
 # --- Chunking ---------------------------------------------------------------
 
 def test_chunking_per_titoli(corpus):
-    chunks = spezza_in_chunk(PAGINA_WIKI, 'wiki/pages/data-sources.md')
+    chunks = spezza_in_chunk(PAGINA_WIKI, 'docs/pages/data-sources.md')
     assert [c.sezione for c in chunks] == ['Fonti dati', 'Open-Meteo', 'ARPA Piemonte']
     assert chunks[1].testo.startswith('## Open-Meteo')
     assert 'rianalisi' in chunks[1].testo
@@ -157,11 +157,11 @@ def test_finestre_con_sovrapposizione():
 
 
 def test_id_stabili_e_fonte_con_slash():
-    primi = spezza_in_chunk(PAGINA_WIKI, 'wiki\\pages\\data-sources.md')
-    secondi = spezza_in_chunk(PAGINA_WIKI, 'wiki\\pages\\data-sources.md')
+    primi = spezza_in_chunk(PAGINA_WIKI, 'docs\\pages\\data-sources.md')
+    secondi = spezza_in_chunk(PAGINA_WIKI, 'docs\\pages\\data-sources.md')
     assert [c.id for c in primi] == [c.id for c in secondi]
-    assert [c.id for c in primi] == [f'wiki/pages/data-sources.md#{i}' for i in range(3)]
-    assert all(c.fonte == 'wiki/pages/data-sources.md' for c in primi)
+    assert [c.id for c in primi] == [f'docs/pages/data-sources.md#{i}' for i in range(3)]
+    assert all(c.fonte == 'docs/pages/data-sources.md' for c in primi)
 
 
 def test_parametri_di_chunking_non_validi():
@@ -176,7 +176,7 @@ def test_cerca_restituisce_il_chunk_giusto_per_primo(corpus, fake):
     risultati = cerca_documenti('stazioni ARPA bias temperatura aria', k=2,
                                 client=fake, indice=indice)
     assert risultati[0]['sezione'] == 'ARPA Piemonte'
-    assert risultati[0]['fonte'] == 'wiki/pages/data-sources.md'
+    assert risultati[0]['fonte'] == 'docs/pages/data-sources.md'
     assert set(risultati[0]) >= {'testo', 'fonte', 'sezione', 'similarita'}
     assert risultati[0]['similarita'] >= risultati[1]['similarita']
 
@@ -206,7 +206,7 @@ def test_round_trip_salva_carica(corpus, fake, tmp_path):
     assert manifest['dimensione'] == 256
     assert manifest['modello_embedding'] == 'FakeLLM'
     assert set(manifest['hash_fonti_sha256']) == {
-        'wiki/pages/data-sources.md', 'data/knowledge_base/faq.md'
+        'docs/pages/data-sources.md', 'data/knowledge_base/faq.md'
     }
 
     ricaricato = IndiceVettoriale.carica(cartella)
@@ -265,7 +265,7 @@ def test_formatta_contesto_contiene_fonte_e_sezione(corpus, fake):
     risultati = cerca_documenti('stazioni ARPA', k=2, client=fake, indice=indice)
     contesto = formatta_contesto(risultati)
     assert contesto.startswith(f'[{risultati[0]["fonte"]} — {risultati[0]["sezione"]}]')
-    assert '[wiki/pages/data-sources.md — ARPA Piemonte]' in contesto
+    assert '[docs/pages/data-sources.md — ARPA Piemonte]' in contesto
     assert risultati[1]['testo'].strip() in contesto
     assert formatta_contesto([]) == ''
 

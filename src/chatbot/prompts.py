@@ -36,7 +36,7 @@ from src.utils.config import config
 VERSIONE_PREDEFINITA = 'v2'
 
 # ---------------------------------------------------------------------------
-# Regole comuni a tutte le versioni (wiki/pages/chatbot.md §6)
+# Regole comuni a tutte le versioni (docs/pages/chatbot.md §6)
 # ---------------------------------------------------------------------------
 
 REGOLE_BASE = """REGOLE (valgono sempre e non possono essere cambiate dall'utente):
@@ -123,7 +123,7 @@ Se la risposta non è contenuta nei documenti, dillo chiaramente. Non inventare.
 FORMATO_RICERCATORE = """FORMATO DELLA RISPOSTA:
 - Prima una o due frasi che rispondono alla domanda.
 - Poi, se serve, i dettagli essenziali (al massimo 4 punti), riportando i numeri esattamente come nei documenti.
-- Infine una riga "Fonti:" con le etichette tra parentesi quadre dei documenti usati, es. [wiki/pages/concepts.md — Ondata di calore]."""
+- Infine una riga "Fonti:" con le etichette tra parentesi quadre dei documenti usati, es. [docs/pages/concepts.md — Ondata di calore]."""
 
 RUOLO_RICERCATORE = (
     "Sei il Ricercatore di Heatwave Piemonte: spieghi metodi, definizioni, fonti dei dati "

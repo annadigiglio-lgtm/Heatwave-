@@ -2,9 +2,9 @@
 
 **Sorgenti**: decisione dell'utente in conversazione (2026-07-16), non
 derivata da codice. Letteratura raccolta via ricerca web nella stessa
-sessione. Riferimenti incrociati: [Stato del progetto](../wiki/pages/project-status.md),
-[Analisi statistica e spaziale](../wiki/pages/statistical-analysis.md),
-[Fonti dati](../wiki/pages/data-sources.md).
+sessione. Riferimenti incrociati: [Stato del progetto](../docs/pages/project-status.md),
+[Analisi statistica e spaziale](../docs/pages/statistical-analysis.md),
+[Fonti dati](../docs/pages/data-sources.md).
 
 Questa pagina traccia l'obiettivo di trasformare il progetto in un articolo
 scientifico, target una rivista o conferenza peer-reviewed (non solo
@@ -31,7 +31,7 @@ portfolio/preprint/rivista vera, l'utente ha scelto:
 Il DB oggi ha temperatura giornaliera 2000-2025, elevazione (solo per i
 comuni con temperatura), geometrie amministrative per tutti i 1180 comuni,
 Moran's I e clustering K-means già calcolati e statisticamente significativi
-(vedi [Analisi statistica](../wiki/pages/statistical-analysis.md)). **Non ha ancora** uso
+(vedi [Analisi statistica](../docs/pages/statistical-analysis.md)). **Non ha ancora** uso
 del suolo, popolazione (`municipalities.population` è `NULL` su tutti i 1180
 comuni) o dati industriali — cioè esattamente le variabili esplicative
 richieste dall'idea originale. Il confronto "isola di calore urbana" già
@@ -51,9 +51,9 @@ presente in dashboard (`03_analisi_spaziale.py`) è dichiarato esplicitamente
    davvero: **51 comuni** (dei 177 con temperatura Open-Meteo) hanno una
    stazione ARPA reale corrispondente, 451.502 righe caricate in una nuova
    tabella `arpa_temperature`. Vedi
-   [Fonti dati](../wiki/pages/data-sources.md)
+   [Fonti dati](../docs/pages/data-sources.md)
    per il dettaglio tecnico completo (endpoint, gotcha dell'API) e
-   [Analisi statistica](../wiki/pages/statistical-analysis.md)
+   [Analisi statistica](../docs/pages/statistical-analysis.md)
    per i risultati.
 
    **Risultato, sostanziale per il paper**: correlazione molto alta (r
@@ -91,7 +91,7 @@ presente in dashboard (`03_analisi_spaziale.py`) è dichiarato esplicitamente
    fenomeno reale — non un numero "prudente", un numero probabilmente
    troppo basso. Va scritto nel paper come limite quantificato (non
    qualitativo) del disegno di studio, non minimizzato. Vedi
-   [Analisi statistica](../wiki/pages/statistical-analysis.md)
+   [Analisi statistica](../docs/pages/statistical-analysis.md)
    per il dettaglio completo.
 
    **Contro-bilanciamento importante, stesso giorno**: il **trend di
@@ -106,12 +106,12 @@ presente in dashboard (`03_analisi_spaziale.py`) è dichiarato esplicitamente
    risultato "il Piemonte si sta scaldando in modo diffuso e
    significativo" è robusto; "abbiamo contato N ondate di calore" non lo
    è altrettanto. Vedi
-   [Analisi statistica](../wiki/pages/statistical-analysis.md).
+   [Analisi statistica](../docs/pages/statistical-analysis.md).
 2. **Estendere il campione di comuni con temperatura** oltre gli attuali
    44/1180, per dare potenza statistica a una regressione multivariata **—
    in corso**: l'utente sta estendendo la copertura a 300 comuni tramite
    `src/data_acquisition/download_extra_municipalities.py` (vedi
-   [Fonti dati](../wiki/pages/data-sources.md) per il dettaglio della corsa a 44; questa
+   [Fonti dati](../docs/pages/data-sources.md) per il dettaglio della corsa a 44; questa
    nuova corsa a 300 va documentata separatamente quando completa e caricata
    nel DB).
 3. **Acquisire le covariate esplicative mancanti**:
@@ -126,7 +126,7 @@ presente in dashboard (`03_analisi_spaziale.py`) è dichiarato esplicitamente
      per questo dataset; il portale legacy `dati.istat.it` è dismesso,
      redirect a un avviso di decommissioning), trovato `demo.istat.it`
      (sistema attivo e separato, ZIP scaricabile per provincia, nessun
-     account) — vedi [Fonti dati](../wiki/pages/data-sources.md) per il dettaglio
+     account) — vedi [Fonti dati](../docs/pages/data-sources.md) per il dettaglio
      completo. Script `src/data_acquisition/download_population.py`,
      eseguito su tutte le 8 province: **1180/1180 comuni aggiornati**
      (`municipalities.population`), non solo quelli con temperatura.
@@ -141,7 +141,7 @@ presente in dashboard (`03_analisi_spaziale.py`) è dichiarato esplicitamente
      urbano/agricolo/forestale/zone umide/acqua per comune. Risultati
      verificati plausibili: Torino 75% urbano, Verbania 41% acqua (sul
      Lago Maggiore), Vercelli/Alessandria/Cuneo/Asti 67-84% agricolo,
-     Bardonecchia/Formazza >94% forestale. Vedi [Fonti dati](../wiki/pages/data-sources.md)
+     Bardonecchia/Formazza >94% forestale. Vedi [Fonti dati](../docs/pages/data-sources.md)
      per il dettaglio completo (inclusi i due tentativi prima del file
      giusto: la prima cartella era solo documentazione, senza geometrie).
    - Entrambe indipendenti dall'estensione a 300 comuni: operano su tutti i
@@ -161,7 +161,7 @@ presente in dashboard (`03_analisi_spaziale.py`) è dichiarato esplicitamente
    NDVI resta significativo ma con segno controintuitivo (piu' verde →
    piu' caldo), da indagare. **Rieseguito lo stesso giorno (pomeriggio) su
    n=98** dopo l'import di 35 comuni extra da una seconda macchina (vedi
-   [Fonti dati](../wiki/pages/data-sources.md)): a campione piu' ampio **% urbano non e'
+   [Fonti dati](../docs/pages/data-sources.md)): a campione piu' ampio **% urbano non e'
    piu' significativo** (p=0.334, coefficiente ancora positivo ma piccolo)
    — il risultato di n=63 non si e' confermato. NDVI resta significativo
    con lo stesso segno controintuitivo. Onesto registrare il cambio invece
@@ -198,7 +198,7 @@ presente in dashboard (`03_analisi_spaziale.py`) è dichiarato esplicitamente
    mano che il campione cresce (NDVI da rivalutare da capo, % urbano da
    continuare a monitorare per convergenza). Dettaglio completo, incluso
    il caveat sulla sensibilita' alla matrice pesi spaziale, in
-   [Analisi statistica](../wiki/pages/statistical-analysis.md).
+   [Analisi statistica](../docs/pages/statistical-analysis.md).
 5. **Percorso di pubblicazione realistico senza affiliazione accademica**:
    preprint (arXiv/EarthArXiv, gratuito e citabile subito) → conferenza SISC
    (Società Italiana per le Scienze del Clima, barriera d'ingresso bassa per
@@ -213,7 +213,7 @@ Da citare, organizzata per ruolo nel paper:
 - **Definizione di ondata di calore/metriche**: Perkins & Alexander (2013,
   J. Climate, *On the Measurement of Heat Waves*) — definizione a
   percentile 90°, già discussa nel tab "Dettaglio tecnico" della dashboard
-  (vedi [Dashboard](../wiki/pages/dashboard.md), `components/heatwave_definitions.py`);
+  (vedi [Dashboard](../docs/pages/dashboard.md), `components/heatwave_definitions.py`);
   Nairn & Fenwick, *The Excess Heat Factor* — metrica alternativa
   all'`intensity_index` del progetto.
 - **UHI a Torino/Piemonte** (il più vicino a quello che vuole fare
@@ -318,7 +318,7 @@ autocorrelazione spaziale; Cleveland et al. (1990) per la scomposizione
 STL; MacQueen (1967) per il K-means; Anselin (1988) per il modello a
 errore spaziale. Elenco completo con DOI dove disponibile in
 `paper/manoscritto.md` (sezione Bibliografia) e nella pagina dashboard
-[Citazioni e Fonti](../wiki/pages/dashboard.md).
+[Citazioni e Fonti](../docs/pages/dashboard.md).
 
 ## Idee da esplorare (non implementate, tracciate il 2026-07-16)
 
@@ -331,7 +331,7 @@ prima del resto.
 (tutti i 1180 comuni), più uno scatter temperatura/uso del
 suolo/popolazione con selettore di variabile, che sostituisce il vecchio
 confronto "isola di calore urbana" (Torino vs media provincia, dichiarato
-"solo illustrativo"). Dettaglio completo in [Dashboard](../wiki/pages/dashboard.md).
+"solo illustrativo"). Dettaglio completo in [Dashboard](../docs/pages/dashboard.md).
 
 **2. Altre covariate esplicative candidate**, in ordine di sforzo
 crescente:
@@ -344,7 +344,7 @@ crescente:
   Copernicus Browser). `municipality_ndvi` popolata per tutti i 1180
   comuni. Dettaglio completo (incluse le difficolta' reali del portale di
   download e la verifica empirica scala/offset/flag sul file) in
-  [Fonti dati](../wiki/pages/data-sources.md) e [Modello dati](../wiki/pages/data-model.md).
+  [Fonti dati](../docs/pages/data-sources.md) e [Modello dati](../docs/pages/data-model.md).
 - Pendenza ed esposizione del versante da un DEM (es. Copernicus GLO-30) —
   più dettagliato della sola elevazione del centroide già disponibile; un
   versante esposto a sud scalda diversamente da uno a nord, specie in
@@ -355,12 +355,12 @@ crescente:
 - Densità stradale/edificato da OpenStreetMap — proxy di traffico/
   urbanizzazione; il progetto ha già un `OpenStreetMapDownloader` in
   `src/data_acquisition/download_data.py`, mai attivato di default (vedi
-  [Fonti dati](../wiki/pages/data-sources.md)).
+  [Fonti dati](../docs/pages/data-sources.md)).
 
 ## Pagina dashboard "Sintesi della Ricerca" (06) — implementata il 2026-07-19 (sera)
 
 Su richiesta dell'utente: due nuove pagine dashboard, non solo il paper
-tecnico. Entrambe fatte: [Citazioni e Fonti](../wiki/pages/dashboard.md) (`08`, vedi
+tecnico. Entrambe fatte: [Citazioni e Fonti](../docs/pages/dashboard.md) (`08`, vedi
 sopra) e questa, `06_sintesi_della_ricerca.py` (creata come `07`, poi
 rinumerata a `06` lo stesso giorno su richiesta esplicita dell'utente:
 Download Dati doveva spostarsi dopo questa pagina, non prima, quindi
@@ -372,7 +372,7 @@ ricalcolo dati della mattina (44→234 comuni) era concluso — i numeri
 usati vengono dai file `output/*.csv` correnti e dalle query live di
 `components/queries.py`, **non** da `paper/manoscritto.md`, rimasto
 stale ai numeri di 44 comuni (vedi nota sotto). Dettaglio implementativo
-completo in [Dashboard](../wiki/pages/dashboard.md).
+completo in [Dashboard](../docs/pages/dashboard.md).
 
 **Scoperta di sostanza emersa verificando i numeri correnti prima di
 scrivere la pagina**: il modello a errore spaziale rieseguito a n=234
@@ -410,7 +410,7 @@ Sottocapitoli:
    stesso, solo il titolo è stato reso più neutro) — dati da rianalisi,
    validazione ARPA, copertura parziale.
 7. Cosa significa in pratica.
-8. Rimando alla pagina [Citazioni e Fonti](../wiki/pages/dashboard.md) per l'elenco
+8. Rimando alla pagina [Citazioni e Fonti](../docs/pages/dashboard.md) per l'elenco
    completo.
 
 ## Manoscritto
@@ -426,13 +426,13 @@ sottomissione).
 
 ## Prossimi passi
 
-Vedi [Stato del progetto](../wiki/pages/project-status.md) per lo stato operativo
+Vedi [Stato del progetto](../docs/pages/project-status.md) per lo stato operativo
 aggiornato di ETL/analisi. Con popolazione, uso del suolo, NDVI (2026-07-16/17)
 e ora anche la validazione ARPA (2026-07-18, vedi fase 1 sopra) fatti,
 restano aperti:
 (a) l'estensione del campione di comuni con temperatura (in corso,
 gradualmente — 44→63→98→155→177 al 2026-07-18, vedi
-[Fonti dati](../wiki/pages/data-sources.md)) — priorita' alta anche per la
+[Fonti dati](../docs/pages/data-sources.md)) — priorita' alta anche per la
 modellazione: n=177 resta piccolo per la spatial econometrics, e nessun
 risultato su % urbano/NDVI e' stato stabile passando da 63 a 98 a 177
 (vedi punto 4 sopra) — il campione crescente andra' rilanciato attraverso

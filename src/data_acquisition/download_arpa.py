@@ -29,7 +29,7 @@ documentati dall'API):
 Copertura reale (verificata il 2026-07-18): su 177 comuni con temperatura
 Open-Meteo, 51 hanno almeno una stazione ARPA attiva con sensore di
 temperatura (incluse tutte le 8 capoluogo di provincia) - vedi
-wiki/pages/data-sources.md per il dettaglio completo.
+docs/pages/data-sources.md per il dettaglio completo.
 
 Usage:
     python -m src.data_acquisition.download_arpa [--dry-run] [--date-min 2000-01-01]
@@ -55,7 +55,7 @@ STATIONS_URL = f"{BASE_URL}/stazione_meteorologica/"
 DAILY_URL = f"{BASE_URL}/dati_giornalieri_meteo/"
 
 # Nessun limite di rate documentato per questa API (a differenza di
-# Open-Meteo, vedi wiki/pages/data-sources.md) - piccola pausa tra le
+# Open-Meteo, vedi docs/pages/data-sources.md) - piccola pausa tra le
 # richieste per prudenza, non per un limite noto.
 REQUEST_DELAY_S = 0.3
 
@@ -150,7 +150,7 @@ def main(
     # dati ARPA gia' scaricati - usato per estendere la copertura reale del
     # progetto oltre i comuni Open-Meteo, senza ri-scaricare stazioni gia'
     # presenti (prudente: l'API ARPA non ha un limite noto, ma non e' stato
-    # verificato che sia assente - vedi wiki/pages/data-sources.md).
+    # verificato che sia assente - vedi docs/pages/data-sources.md).
     municipality_filter = """
         WHERE m.municipality_id NOT IN (SELECT DISTINCT municipality_id FROM arpa_temperature)
     """ if only_uncovered else """
@@ -175,7 +175,7 @@ def main(
         return matched
 
     # Salvataggio incrementale (una stazione alla volta, subito su disco):
-    # lezione imparata con Open-Meteo (vedi wiki/pages/data-sources.md) -
+    # lezione imparata con Open-Meteo (vedi docs/pages/data-sources.md) -
     # un'interruzione a meta' non deve far perdere le stazioni gia' scaricate.
     # A differenza della versione originale, NON si cancella un file
     # preesistente: se lo script viene rilanciato dopo un blocco a meta',

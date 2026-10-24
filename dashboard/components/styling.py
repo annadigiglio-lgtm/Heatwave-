@@ -447,7 +447,7 @@ def render_hero(eyebrow: str, title: str, lede: str, meta: list[tuple[str, str]]
     # indentata di 4+ spazi (anche dentro un blocco HTML) come blocco di
     # codice letterale, non HTML - un'indentazione "leggibile" qui
     # renderizzava il markup come testo invece che come pagina (bug reale,
-    # vedi wiki/log.md 2026-07-17).
+    # vedi docs/log.md 2026-07-17).
     st.markdown(
         f'<div class="hw-hero">'
         f'<div class="hw-eyebrow"><span class="hw-rule"></span>{eyebrow}</div>'

@@ -31,7 +31,7 @@ borderColor = "#e2e8f0"
 # ancora i colori quasi-neri della sessione 2026-07-15, indipendenti dal
 # grigio ardesia scelto per il restyling — la pagina appariva "sempre nera"
 # perché hero/card (chiari solo di poco) galleggiavano sopra questo sfondo
-# nativo invece che fondercisi. Vedi wiki/log.md 2026-07-17.
+# nativo invece che fondercisi. Vedi docs/log.md 2026-07-17.
 primaryColor = "#3498db"
 backgroundColor = "#1c2130"
 secondaryBackgroundColor = "#262c3d"

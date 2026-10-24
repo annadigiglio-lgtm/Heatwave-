@@ -12,7 +12,7 @@ Su questo PC Ollama gira su CPU (circa 3 token/s), quindi la pagina:
    sostituisce con il testo verificato dal Revisore.
 
 La conversazione vive solo in `st.session_state` (mai su disco): vedi
-`wiki/pages/etica-e-limiti.md`. Per i test: `HEATWAVE_FAKE_LLM=1`.
+`docs/pages/etica-e-limiti.md`. Per i test: `HEATWAVE_FAKE_LLM=1`.
 """
 
 import json
@@ -43,7 +43,7 @@ AVVISO_AI = (
     "documenti di Heatwave Piemonte, può sbagliare e non è un servizio di "
     "allerta o di consulenza sanitaria. Non inserire dati personali."
 )
-# Quattro domande della demo (wiki/pages/chatbot.md): un percorso ciascuna.
+# Quattro domande della demo (docs/pages/chatbot.md): un percorso ciascuna.
 DOMANDE_ESEMPIO = [
     "Com'è cambiata la temperatura a Alessandria dal 2000?",          # dati (tool trend)
     "Perché Open-Meteo e ARPA danno valori diversi?",                  # metodo (RAG)
