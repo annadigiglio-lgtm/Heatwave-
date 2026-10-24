@@ -42,6 +42,7 @@ TEMPERATURA_PREDEFINITA = 0.2
 KEEP_ALIVE_PREDEFINITO = '30m'
 TIMEOUT_RISPOSTA_PREDEFINITO = 180.0  # secondi; su CPU una risposta lunga può superare il minuto
 VARIABILE_FAKE = 'HEATWAVE_FAKE_LLM'
+PROVIDER = ('ollama', 'gemini', 'anthropic')
 RISPOSTA_FAKE_PREDEFINITA = 'Risposta di prova del FakeLLM.'
 
 Messaggi = list[dict]
@@ -371,6 +372,143 @@ def _traduci_errore_anthropic(errore: Exception, modello: str) -> LLMNonDisponib
 
 
 # ---------------------------------------------------------------------------
+# Client Gemini (API Google, piano gratuito, lezione 13-02)
+# ---------------------------------------------------------------------------
+
+def _chiave_gemini() -> str | None:
+    """Chiave da ``GOOGLE_API_KEY`` (come nel corso) o ``GEMINI_API_KEY``."""
+    return os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
+
+
+def _modello_gemini() -> str:
+    return str(config.get('chatbot.gemini_model', '') or '')
+
+
+def _contenuti_gemini(messaggi: Messaggi) -> tuple[str, list[dict]]:
+    """System prompt separato e ruoli Gemini: ``assistant`` diventa ``model``."""
+    system, conversazione = _separa_system(messaggi)
+    contenuti = [
+        {'role': 'model' if m['role'] == 'assistant' else 'user', 'parts': [{'text': str(m['content'])}]}
+        for m in conversazione
+    ]
+    return system, contenuti
+
+
+class GeminiClient:
+    """Client per l'API Gemini di Google; la chiave arriva solo da ``.env``.
+
+    Le risposte arrivano in pochi secondi invece dei minuti di Ollama su CPU.
+    Il "ragionamento" interno dei modelli Gemini recenti consuma il limite di
+    token in uscita: ``chatbot.gemini_thinking_budget`` (default 0) lo
+    disattiva, così le risposte brevi non arrivano vuote. Gli embedding del
+    RAG restano su Ollama (``bge-m3``), lo stesso modello con cui è costruito
+    l'indice.
+    """
+
+    def __init__(
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        client: object | None = None,
+        thinking_budget: int | None = None,
+        timeout: float | None = None,
+    ) -> None:
+        """Controlla modello e chiave; ``client`` permette di iniettare un mock."""
+        self.model = model or _modello_gemini()
+        if not self.model:
+            raise LLMNonDisponibile(
+                'Modello Gemini non configurato: imposta chatbot.gemini_model in config.yaml.'
+            )
+        budget = thinking_budget if thinking_budget is not None else config.get(
+            'chatbot.gemini_thinking_budget', 0)
+        self.thinking_budget = None if budget is None or str(budget) == '' else int(budget)
+        self.timeout = float(timeout) if timeout is not None else _timeout_risposta()
+        if client is not None:
+            self._client = client
+            return
+        chiave = api_key or _chiave_gemini()
+        if not chiave:
+            raise LLMNonDisponibile(
+                'Chiave Gemini assente: crea una chiave gratuita su aistudio.google.com e '
+                'imposta GOOGLE_API_KEY nel file .env (mai nel codice).'
+            )
+        from google import genai  # import locale: serve solo a chi usa questo provider
+        from google.genai import types
+        self._client = genai.Client(
+            api_key=chiave, http_options=types.HttpOptions(timeout=int(self.timeout * 1000)))
+
+    def _configurazione(self, system: str, temperature: float | None, max_tokens: int | None):
+        from google.genai import types
+        parametri: dict = {'temperature': _temperatura(temperature)}
+        if system:
+            parametri['system_instruction'] = system
+        if max_tokens is not None:
+            parametri['max_output_tokens'] = int(max_tokens)
+        if self.thinking_budget is not None:
+            parametri['thinking_config'] = types.ThinkingConfig(thinking_budget=self.thinking_budget)
+        return types.GenerateContentConfig(**parametri)
+
+    def chiedi(
+        self,
+        messaggi: Messaggi,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        on_token: CallbackToken | None = None,
+    ) -> str:
+        """``generate_content`` (o ``generate_content_stream`` con ``on_token``)."""
+        _valida_messaggi(messaggi)
+        system, contenuti = _contenuti_gemini(messaggi)
+        configurazione = self._configurazione(system, temperature, max_tokens)
+        try:
+            if on_token is None:
+                risposta = self._client.models.generate_content(
+                    model=self.model, contents=contenuti, config=configurazione)
+                return risposta.text or ''
+            pezzi = []
+            for parte in self._client.models.generate_content_stream(
+                    model=self.model, contents=contenuti, config=configurazione):
+                testo = getattr(parte, 'text', None) or ''
+                if testo:
+                    pezzi.append(testo)
+                    on_token(testo)
+            return ''.join(pezzi)
+        except LLMNonDisponibile:
+            raise
+        except Exception as errore:
+            logger.warning(f'Chiamata Gemini fallita: {type(errore).__name__}')
+            raise _traduci_errore_gemini(errore, self.model, self.timeout) from errore
+
+    def embed(self, testi: list[str]) -> list[list[float]]:
+        """Non usato: gli embedding del progetto usano sempre Ollama."""
+        raise LLMNonDisponibile(
+            'Nel progetto gli embedding usano sempre Ollama '
+            f'({_modello_embedding()}), lo stesso modello con cui è costruito l\'indice RAG.'
+        )
+
+
+def _traduci_errore_gemini(errore: Exception, modello: str, timeout: float) -> LLMNonDisponibile:
+    """Converte le eccezioni dell'SDK Gemini in messaggi chiari."""
+    if isinstance(errore, (httpx.TimeoutException,)):
+        return _errore_timeout(modello, timeout)
+    if isinstance(errore, (httpx.TransportError, ConnectionError)):
+        return LLMNonDisponibile("Impossibile raggiungere l'API Gemini: controlla la connessione a internet.")
+    codice = getattr(errore, 'code', None)
+    testo = str(errore)
+    if codice == 429:
+        return LLMNonDisponibile(
+            'Limite del piano gratuito Gemini raggiunto (troppe richieste): attendi circa un minuto '
+            'e riprova, oppure passa al modello locale Ollama nella barra laterale.')
+    if codice in (401, 403) or 'API key not valid' in testo or 'API_KEY_INVALID' in testo:
+        return LLMNonDisponibile('Chiave Gemini non valida: controlla GOOGLE_API_KEY nel file .env.')
+    if codice == 404:
+        return LLMNonDisponibile(
+            f'Modello Gemini "{modello}" non trovato: controlla chatbot.gemini_model in config.yaml.')
+    if codice is not None and codice >= 500:
+        return LLMNonDisponibile('Servizio Gemini momentaneamente non disponibile: riprova tra poco.')
+    return LLMNonDisponibile(f"Errore dell'API Gemini: {testo}")
+
+
+# ---------------------------------------------------------------------------
 # FakeLLM per i test
 # ---------------------------------------------------------------------------
 
@@ -476,7 +614,9 @@ def crea_client(provider: str | None = None) -> ClientLLM:
         return OllamaClient()
     if scelto == 'anthropic':
         return AnthropicClient()
-    raise ValueError(f'Provider LLM non riconosciuto: "{scelto}" (usa ollama o anthropic)')
+    if scelto == 'gemini':
+        return GeminiClient()
+    raise ValueError(f'Provider LLM non riconosciuto: "{scelto}" (usa {", ".join(PROVIDER)})')
 
 
 def chiedi_llm(
@@ -492,6 +632,15 @@ def _modelli_ollama_scaricati(host: str) -> set[str]:
     return {m.model for m in client.list().models if m.model}
 
 
+def _stato_gemini() -> tuple[bool, str]:
+    """Controlla chiave e modello Gemini senza chiamare l'API."""
+    try:
+        client = GeminiClient()
+    except LLMNonDisponibile as errore:
+        return False, str(errore)
+    return True, f'Gemini configurato ({client.model})'
+
+
 def _stato_anthropic() -> tuple[bool, str]:
     """Controlla chiave e modello Anthropic senza chiamare l'API."""
     try:
@@ -501,7 +650,7 @@ def _stato_anthropic() -> tuple[bool, str]:
     return True, f'Anthropic configurato ({client.model})'
 
 
-def stato_llm() -> tuple[bool, str]:
+def stato_llm(provider: str | None = None) -> tuple[bool, str]:
     """Stato del chatbot per la sidebar: ``(ok, messaggio)``. Non solleva mai.
 
     Controlla che il server Ollama risponda e che i modelli di chat e di
@@ -511,10 +660,10 @@ def stato_llm() -> tuple[bool, str]:
     try:
         if _fake_attivo():
             return True, 'FakeLLM attivo (HEATWAVE_FAKE_LLM=1): nessun modello reale'
-        provider = str(config.get('chatbot.provider', 'ollama')).strip().lower()
+        provider = (provider or str(config.get('chatbot.provider', 'ollama'))).strip().lower()
         richiesti = [_modello_embedding()]
-        if provider == 'anthropic':
-            ok, messaggio = _stato_anthropic()
+        if provider in ('anthropic', 'gemini'):
+            ok, messaggio = _stato_anthropic() if provider == 'anthropic' else _stato_gemini()
             if not ok:
                 return False, messaggio
         elif provider == 'ollama':

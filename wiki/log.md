@@ -4195,3 +4195,16 @@ Hardware verificato: Intel i7-10510U (4 core), solo grafica integrata Intel UHD,
 - Pagina 11 e `etica-e-limiti.md` aggiornate: la cache è l'unico salvataggio
   delle conversazioni, locale, cancellabile e disattivabile.
 - 217 test passano.
+
+# 2026-10-24 — provider Gemini per la velocità
+
+L'utente ha giudicato la cache non sufficiente (una domanda nuova restava a
+1–3 minuti). Su sua scelta: provider **Gemini** (API Google, piano gratuito,
+già nel corso alla lezione 13) con `google-genai==2.29.0`; `cryptography` e
+`cffi` non sono bloccati da Smart App Control. `GeminiClient` con streaming,
+timeout, `thinking_budget` 0 ed errori tradotti; `crea_client('gemini')`,
+`stato_llm(provider)`. Pagina 10: selettore del motore (Gemini / Ollama),
+riscaldamento solo per Ollama, avviso privacy. Pagina 11 e
+`etica-e-limiti.md` aggiornate. La cache resta accesa. 226 test passano.
+Da fare: inserimento di `GOOGLE_API_KEY` da parte dell'utente, verifica del nome
+del modello disponibile, prova reale, scelta del provider predefinito.

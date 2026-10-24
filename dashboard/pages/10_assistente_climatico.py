@@ -28,7 +28,7 @@ from components import PROJECT_ROOT
 from components.styling import inject_custom_css, render_sidebar_branding
 from src.chatbot import cache_risposte
 from src.chatbot.agent import PREFISSO_EVENTO_TOOL, esegui_agente, riscalda_modello
-from src.chatbot.llm_client import LLMNonDisponibile, stato_llm
+from src.chatbot.llm_client import LLMNonDisponibile, crea_client, stato_llm
 from src.chatbot.memory import FINESTRA_PREDEFINITA, MemoriaConversazione
 from src.chatbot.prompts import SYSTEM_PROMPTS, VERSIONE_PREDEFINITA
 from src.utils.config import config
@@ -72,19 +72,28 @@ for chiave in (CHIAVE_MESSAGGI, CHIAVE_STORIA):
 # ---------------------------------------------------------------------------
 
 @st.cache_data(ttl=30, show_spinner=False)
-def stato_llm_in_cache() -> tuple[bool, str]:
-    """`stato_llm()` interroga Ollama: al massimo una volta ogni 30 s."""
-    return stato_llm()
+def stato_llm_in_cache(motore: str) -> tuple[bool, str]:
+    """`stato_llm()` interroga Ollama: al massimo una volta ogni 30 s per motore."""
+    return stato_llm(motore)
 
 
 @st.cache_resource(show_spinner=False)
-def modello_riscaldato(versione: str) -> float:
+def client_per(motore: str):
+    """Un client per motore e processo server (con `HEATWAVE_FAKE_LLM=1` è un FakeLLM)."""
+    return crea_client(motore)
+
+
+@st.cache_resource(show_spinner=False)
+def modello_riscaldato(motore: str, versione: str) -> float:
     """Una sola lettura lenta del system prompt per processo server e versione.
 
-    Le eccezioni (es. `LLMNonDisponibile`) non vengono messe in cache: al
-    rerun successivo si riprova.
+    Serve solo a Ollama su CPU (circa 2 minuti la prima volta); le API cloud
+    rispondono subito. Le eccezioni (es. `LLMNonDisponibile`) non vengono
+    messe in cache: al rerun successivo si riprova.
     """
-    return riscalda_modello(prompt_version=versione)
+    if motore != 'ollama':
+        return 0.0
+    return riscalda_modello(client=client_per(motore), prompt_version=versione)
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +166,7 @@ def mostra_ragionamento(dettagli: dict) -> None:
             st.caption('Nessun documento usato.')
 
 
-def rispondi(domanda: str, versione: str) -> None:
+def rispondi(domanda: str, versione: str, motore: str) -> None:
     """Esegue l'agente mostrando passi e streaming; salva il risultato nella storia."""
     st.session_state[CHIAVE_MESSAGGI].append({'role': 'user', 'content': domanda})
     with st.chat_message('user'):
@@ -167,7 +176,8 @@ def rispondi(domanda: str, versione: str) -> None:
     memoria = MemoriaConversazione.from_list(st.session_state[CHIAVE_STORIA], finestra=finestra)
 
     with st.chat_message('assistant'):
-        stato = st.status('Sto ragionando… (su questo PC può richiedere 1–3 minuti)', expanded=True)
+        attesa = ' (su questo PC può richiedere 1–3 minuti)' if motore == 'ollama' else ''
+        stato = st.status(f'Sto ragionando…{attesa}', expanded=True)
         area_testo = st.empty()
         pezzi: list[str] = []
 
@@ -183,8 +193,9 @@ def rispondi(domanda: str, versione: str) -> None:
             area_testo.markdown(''.join(pezzi) + '▌')
 
         try:
-            risposta = esegui_agente(domanda, memoria=memoria, prompt_version=versione,
-                                     on_evento=on_evento, on_token=on_token)
+            risposta = esegui_agente(domanda, memoria=memoria, client=client_per(motore),
+                                     prompt_version=versione, on_evento=on_evento,
+                                     on_token=on_token)
         except LLMNonDisponibile as errore:
             stato.update(label='Il modello non è disponibile', state='error', expanded=False)
             area_testo.empty()
@@ -239,20 +250,39 @@ def mostra_valutazione() -> None:
 # Sidebar
 # ---------------------------------------------------------------------------
 
-llm_ok, llm_messaggio = stato_llm_in_cache()
-provider = str(config.get('chatbot.provider', 'ollama'))
-modello = str(config.get('chatbot.anthropic_model' if provider == 'anthropic' else 'chatbot.model', ''))
+MOTORI = {
+    'gemini': '☁️ Gemini — veloce (API Google, piano gratuito)',
+    'ollama': '💻 Ollama — locale e privato (lento su questo PC)',
+}
+MODELLO_PER_MOTORE = {'gemini': 'chatbot.gemini_model', 'ollama': 'chatbot.model',
+                      'anthropic': 'chatbot.anthropic_model'}
+provider_config = str(config.get('chatbot.provider', 'ollama')).strip().lower()
+if provider_config not in MOTORI:
+    MOTORI[provider_config] = provider_config
+motori = list(MOTORI)
 versioni = list(SYSTEM_PROMPTS)
 versione_config = str(config.get('chatbot.prompt_version', VERSIONE_PREDEFINITA))
 indice_versione = versioni.index(versione_config) if versione_config in versioni else 0
 
 with st.sidebar:
     st.markdown('### 💬 Assistente climatico')
+    motore = st.selectbox(
+        'Motore del modello', motori, index=motori.index(provider_config),
+        format_func=MOTORI.get,
+        help='Gemini risponde in pochi secondi ma invia le domande a Google; Ollama gira '
+             'su questo computer (nessun dato esce) ma su CPU richiede 1–3 minuti.',
+    )
+    llm_ok, llm_messaggio = stato_llm_in_cache(motore)
     if llm_ok:
         st.success(llm_messaggio, icon='✅')
     else:
         st.error(llm_messaggio, icon='❌')
-    st.caption(f'Provider: **{provider}** · Modello: **{modello or "non configurato"}**')
+    modello = str(config.get(MODELLO_PER_MOTORE.get(motore, 'chatbot.model'), ''))
+    st.caption(f'Modello: **{modello or "non configurato"}** · embedding RAG: '
+               f'**{config.get("chatbot.rag.embedding_model", "bge-m3")}** (Ollama, locale)')
+    if motore != 'ollama':
+        st.caption('🔒 Con questo motore le domande e i dati consultati vengono inviati al '
+                   'servizio esterno: non inserire dati personali.')
     versione = st.selectbox(
         'Versione del prompt', versioni, index=indice_versione,
         help='v1: solo regole; v2: ruolo, esempi di chiamata tool e formato della risposta.',
@@ -262,8 +292,12 @@ with st.sidebar:
     for numero, esempio in enumerate(DOMANDE_ESEMPIO):
         st.button(esempio, key=f'esempio_{numero}', on_click=scegli_esempio, args=(esempio,),
                   disabled=not llm_ok, width='stretch')
-    st.caption('⏱️ Su questo PC il modello gira su CPU: una risposta richiede 1–3 minuti; '
-               'i rifiuti sono immediati e le domande già poste arrivano dalla cache.')
+    if motore == 'ollama':
+        st.caption('⏱️ Su questo PC Ollama gira su CPU: una risposta richiede 1–3 minuti; '
+                   'i rifiuti sono immediati e le domande già poste arrivano dalla cache.')
+    else:
+        st.caption('⏱️ Risposte in pochi secondi; i rifiuti sono immediati e le domande già '
+                   'poste arrivano dalla cache.')
     if cache_risposte.cache_attiva():
         salvate = cache_risposte.conta()
         if st.button(f'🧹 Svuota cache risposte ({salvate})', disabled=not salvate,
@@ -310,7 +344,7 @@ with tab_chat:
     if llm_ok:
         try:
             with st.spinner('Preparo il modello: la prima volta richiede circa 2 minuti…'):
-                modello_riscaldato(versione)
+                modello_riscaldato(motore, versione)
         except LLMNonDisponibile as errore:
             pronto = False
             st.error(f'**Il modello non è disponibile.** {errore}')
@@ -320,14 +354,14 @@ with tab_chat:
                      'Controlla la sezione `chatbot` di `config.yaml`.')
     else:
         st.warning(
-            'La chat è disattivata perché il modello non è pronto (vedi la barra laterale). '
-            'Avvia Ollama (`ollama serve` o l\'app Ollama), scarica i modelli con '
-            f'`ollama pull {config.get("chatbot.model", "qwen2.5:7b")}` e '
-            f'`ollama pull {config.get("chatbot.rag.embedding_model", "bge-m3")}`, poi ricarica la pagina.'
+            f'La chat è disattivata perché il motore scelto non è pronto: {llm_messaggio} '
+            'Puoi anche scegliere un altro motore nella barra laterale. Ollama serve '
+            'comunque per gli embedding dei documenti (`ollama pull '
+            f'{config.get("chatbot.rag.embedding_model", "bge-m3")}`).'
         )
 
     scritta = st.chat_input('Scrivi una domanda sul clima del Piemonte…', disabled=not pronto)
     domanda = scritta or st.session_state.pop(CHIAVE_IN_ATTESA, None)
     if domanda and pronto:
         with zona_chat:
-            rispondi(domanda, versione)
+            rispondi(domanda, versione, motore)

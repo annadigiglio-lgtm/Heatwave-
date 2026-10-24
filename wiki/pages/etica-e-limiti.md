@@ -61,6 +61,12 @@ finale. Va riportato con parole semplici, senza tecnicismi inutili.
 - Con Ollama il modello gira in locale e i testi non escono dal computer;
   con il provider Anthropic opzionale le domande vengono inviate a un
   servizio esterno, e la pagina lo dichiara.
+- **Gemini** (API Google, piano gratuito, lezione 13): risponde in pochi
+  secondi, ma domanda e dati consultati vengono inviati a Google; nei termini
+  del piano gratuito i contenuti possono essere usati per migliorare i servizi
+  di Google (da ricontrollare nei termini aggiornati). Quindi nessun dato
+  personale nelle domande; la barra laterale lo ricorda quando Gemini è attivo.
+  Gli embedding del RAG restano locali (Ollama, `bge-m3`).
 
 ## Testo breve da mostrare nella pagina del chatbot
 

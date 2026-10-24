@@ -176,8 +176,16 @@ with tab_chat:
             "conversazioni.\n"
             "- **Ollama (predefinito)**: il modello gira in locale, i testi non "
             "escono dal computer.\n"
+            "- **Gemini (API Google, piano gratuito)**: risponde in pochi secondi, "
+            "ma la domanda e i dati consultati dai tool vengono inviati a Google. "
+            "Nei termini del piano gratuito i contenuti possono essere usati da "
+            "Google per migliorare i propri servizi (da verificare nei termini "
+            "aggiornati): per questo **non vanno inseriti dati personali**. La "
+            "pagina dell'assistente lo ricorda quando questo motore è attivo.\n"
             "- **Anthropic (opzionale)**: le domande vengono inviate a un "
-            "servizio esterno, e la pagina lo dichiara."
+            "servizio esterno, e la pagina lo dichiara.\n"
+            "- Gli **embedding** dei documenti (RAG) si calcolano sempre in locale "
+            "con Ollama, qualunque sia il motore."
         )
 
 with tab_rules:

@@ -52,6 +52,7 @@ streamlit-folium==0.27.2
 # (orjson, torch, regex) - vedi wiki/pages/chatbot.md.
 ollama==0.6.3
 anthropic==1.12.1  # provider facoltativo, chiave solo da .env
+google-genai==2.29.0  # provider Gemini (lezione 13), chiave GOOGLE_API_KEY in .env
 
 # --- Utilities ---
 pyyaml==6.0.3

@@ -69,6 +69,19 @@ Variabili in `.env` (solo se si usa Anthropic): `ANTHROPIC_API_KEY`.
 dei tool; i modelli da 3B come `llama3.2` lo fanno in modo meno affidabile.
 Il modello resta configurabile, e la scelta va spiegata all'orale.
 
+### Provider Gemini (soluzione alla lentezza, 2026-10-24)
+
+`GeminiClient` in `llm_client.py` (provider della lezione 13-02, `from google
+import genai`, chiave `GOOGLE_API_KEY` in `.env`, piano gratuito):
+`generate_content` / `generate_content_stream` con `system_instruction`,
+ruoli `user`/`model`, `max_output_tokens`, `thinking_budget: 0` (senza, il
+"ragionamento" interno consuma i token e le risposte brevi arrivano vuote).
+Errori tradotti: 429 limite del piano gratuito, chiave non valida, modello
+non trovato, servizio non disponibile, timeout. Nella pagina 10 il motore si
+sceglie dalla barra laterale (Gemini veloce oppure Ollama locale e privato);
+gli embedding del RAG restano su Ollama. Avvertenza privacy nella barra
+laterale e nella pagina 11.
+
 ## 2. Tool dati (`tools.py`) — lezione 20
 
 Leggono **solo** `data/dashboard_export/*.parquet` e `models/`. Ogni tool:

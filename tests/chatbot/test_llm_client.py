@@ -218,7 +218,7 @@ def test_crea_client_fake(monkeypatch):
 def test_crea_client_ollama_e_provider_sconosciuto():
     assert isinstance(crea_client('ollama'), OllamaClient)
     with pytest.raises(ValueError, match='non riconosciuto'):
-        crea_client('gemini')
+        crea_client('mistral')
 
 
 def test_stato_llm_server_spento(monkeypatch):
@@ -319,3 +319,84 @@ def test_anthropic_on_token_riceve_il_testo_intero():
     client = AnthropicClient(model='claude-modello-test', client=finto)
     assert client.chiedi(MESSAGGI, on_token=ricevuti.append) == 'Risposta'
     assert ricevuti == ['Risposta']
+
+
+# --- Gemini (lezione 13-02) -----------------------------------------------------
+
+from src.chatbot.llm_client import GeminiClient  # noqa: E402
+
+CONVERSAZIONE = [
+    {'role': 'system', 'content': 'Regole'},
+    {'role': 'user', 'content': 'Domanda'},
+    {'role': 'assistant', 'content': 'TOOL: x'},
+    {'role': 'user', 'content': 'Risultato'},
+]
+
+
+def _gemini_finto(testo='ok', pezzi=None, errore=None):
+    finto = MagicMock()
+    if errore is not None:
+        finto.models.generate_content.side_effect = errore
+        finto.models.generate_content_stream.side_effect = errore
+    finto.models.generate_content.return_value = SimpleNamespace(text=testo)
+    finto.models.generate_content_stream.return_value = [SimpleNamespace(text=p) for p in (pezzi or [])]
+    return finto
+
+
+def test_gemini_system_separato_e_ruoli():
+    finto = _gemini_finto('Risposta')
+    client = GeminiClient(model='gemini-test', client=finto, thinking_budget=0)
+    assert client.chiedi(CONVERSAZIONE, temperature=0.1, max_tokens=50) == 'Risposta'
+    argomenti = finto.models.generate_content.call_args.kwargs
+    assert argomenti['model'] == 'gemini-test'
+    assert [c['role'] for c in argomenti['contents']] == ['user', 'model', 'user']
+    configurazione = argomenti['config']
+    assert configurazione.system_instruction == 'Regole'
+    assert configurazione.temperature == pytest.approx(0.1)
+    assert configurazione.max_output_tokens == 50
+    assert configurazione.thinking_config.thinking_budget == 0
+
+
+def test_gemini_streaming():
+    finto = _gemini_finto(pezzi=['Cia', 'o ', 'mondo'])
+    ricevuti = []
+    testo = GeminiClient(model='g', client=finto).chiedi(MESSAGGI, on_token=ricevuti.append)
+    assert testo == 'Ciao mondo' and ricevuti == ['Cia', 'o ', 'mondo']
+    finto.models.generate_content.assert_not_called()
+
+
+def test_gemini_senza_chiave(monkeypatch):
+    monkeypatch.delenv('GOOGLE_API_KEY', raising=False)
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    with pytest.raises(LLMNonDisponibile, match='aistudio.google.com'):
+        GeminiClient(model='g')
+
+
+@pytest.mark.parametrize('codice, attesa', [
+    (429, 'piano gratuito'), (404, 'non trovato'), (403, 'non valida'), (503, 'non disponibile'),
+])
+def test_gemini_errori_tradotti(codice, attesa):
+    errore = Exception('errore API')
+    errore.code = codice
+    client = GeminiClient(model='g', client=_gemini_finto(errore=errore))
+    with pytest.raises(LLMNonDisponibile, match=attesa):
+        client.chiedi(MESSAGGI)
+
+
+def test_gemini_timeout():
+    client = GeminiClient(model='g', client=_gemini_finto(errore=httpx.ReadTimeout('lento')), timeout=9)
+    with pytest.raises(LLMNonDisponibile, match='entro 9 secondi'):
+        client.chiedi(MESSAGGI)
+
+
+def test_crea_client_e_stato_gemini(monkeypatch):
+    monkeypatch.delenv('HEATWAVE_FAKE_LLM', raising=False)
+    monkeypatch.setenv('GOOGLE_API_KEY', 'chiave-finta')
+    assert isinstance(llm_client.crea_client('gemini'), GeminiClient)
+    monkeypatch.setattr(llm_client, '_modelli_ollama_scaricati', lambda host: {'bge-m3:latest'})
+    ok, messaggio = llm_client.stato_llm('gemini')
+    assert ok and 'gemini' in messaggio
+    monkeypatch.delenv('GOOGLE_API_KEY')
+    ok, messaggio = llm_client.stato_llm('gemini')
+    assert not ok and 'GOOGLE_API_KEY' in messaggio
+
