@@ -478,6 +478,11 @@ def _chiedi(lavoro: _Lavoro, messaggi: list[dict], max_tokens: int | None = None
     if streaming:
         parametri['on_token'] = on_token
     risposta = lavoro.client.chiedi(messaggi, **parametri) or ''
+    preleva = getattr(lavoro.client, 'preleva_avvisi', None)
+    if callable(preleva):
+        for avviso in preleva():  # cambio automatico al modello di riserva
+            lavoro.avvisi.append(avviso)
+            _evento(lavoro, 'Modello principale non disponibile: uso il modello di riserva…')
     if on_token is not None and not streaming and risposta:
         on_token(risposta)
     return risposta.strip()

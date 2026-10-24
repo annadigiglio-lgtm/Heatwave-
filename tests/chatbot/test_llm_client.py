@@ -392,11 +392,76 @@ def test_gemini_timeout():
 def test_crea_client_e_stato_gemini(monkeypatch):
     monkeypatch.delenv('HEATWAVE_FAKE_LLM', raising=False)
     monkeypatch.setenv('GOOGLE_API_KEY', 'chiave-finta')
-    assert isinstance(llm_client.crea_client('gemini'), GeminiClient)
+    assert isinstance(llm_client.crea_client('gemini', con_riserva=False), GeminiClient)
     monkeypatch.setattr(llm_client, '_modelli_ollama_scaricati', lambda host: {'bge-m3:latest'})
     ok, messaggio = llm_client.stato_llm('gemini')
     assert ok and 'gemini' in messaggio
     monkeypatch.delenv('GOOGLE_API_KEY')
     ok, messaggio = llm_client.stato_llm('gemini')
     assert not ok and 'GOOGLE_API_KEY' in messaggio
+
+
+# --- Riserva automatica (Gemini -> Ollama) -------------------------------------
+
+from src.chatbot.llm_client import ClientConRiserva  # noqa: E402
+
+
+class _Principale:
+    model = 'gemini-test'
+
+    def __init__(self, errore=None):
+        self.errore, self.chiamate = errore, 0
+
+    def chiedi(self, messaggi, temperature=None, max_tokens=None, on_token=None):
+        self.chiamate += 1
+        if self.errore:
+            raise self.errore
+        return 'dal principale'
+
+
+def test_riserva_non_usata_se_il_principale_risponde():
+    riserva = FakeLLM(['dalla riserva'])
+    client = ClientConRiserva(_Principale(), lambda: riserva)
+    assert client.chiedi(MESSAGGI) == 'dal principale'
+    assert riserva.chiamate == [] and client.preleva_avvisi() == []
+    assert client.model == 'gemini-test'
+
+
+def test_riserva_su_quota_esaurita_e_riposo_del_principale():
+    principale = _Principale(LLMNonDisponibile('Quota giornaliera gratuita di Gemini esaurita'))
+    riserva = FakeLLM(['dalla riserva'])
+    client = ClientConRiserva(principale, lambda: riserva)
+    assert client.chiedi(MESSAGGI) == 'dalla riserva'
+    avvisi = client.preleva_avvisi()
+    assert len(avvisi) == 1 and 'riserva' in avvisi[0]
+    assert client.preleva_avvisi() == []          # l'avviso si legge una volta sola
+    assert client.chiedi(MESSAGGI) == 'dalla riserva'
+    assert principale.chiamate == 1               # a riposo: non viene richiamato
+    assert client.in_riserva() and client.model == 'FakeLLM'
+
+
+def test_errore_anche_della_riserva_viene_propagato():
+    riserva = MagicMock()
+    riserva.chiedi.side_effect = LLMNonDisponibile('Ollama spento')
+    client = ClientConRiserva(_Principale(LLMNonDisponibile('504')), lambda: riserva)
+    with pytest.raises(LLMNonDisponibile, match='Ollama spento'):
+        client.chiedi(MESSAGGI)
+
+
+def test_gemini_quota_giornaliera_messaggio_dedicato():
+    errore = Exception('429 RESOURCE_EXHAUSTED ... Generate content requests per day limit exceeded')
+    errore.code = 429
+    client = GeminiClient(model='g', client=_gemini_finto(errore=errore))
+    with pytest.raises(LLMNonDisponibile, match='giornaliera'):
+        client.chiedi(MESSAGGI)
+
+
+def test_crea_client_gemini_con_riserva(monkeypatch):
+    monkeypatch.delenv('HEATWAVE_FAKE_LLM', raising=False)
+    monkeypatch.setenv('GOOGLE_API_KEY', 'chiave-finta')
+    valori = {'chatbot.riserva': 'ollama'}
+    originale = llm_client.config.get
+    monkeypatch.setattr(llm_client.config, 'get', lambda k, d=None: valori.get(k, originale(k, d)))
+    assert isinstance(llm_client.crea_client('gemini'), ClientConRiserva)
+    assert isinstance(llm_client.crea_client('gemini', con_riserva=False), GeminiClient)
 

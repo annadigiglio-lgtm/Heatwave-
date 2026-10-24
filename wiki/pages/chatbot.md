@@ -101,6 +101,20 @@ limite la libreria ritentava per circa 2 minuti, ora `TENTATIVI_GEMINI = 2`),
 6/6 corrette con entrambi; le risposte di Gemini riportano tutti i numeri dei
 tool e le fonti, senza avvisi del Revisore.
 
+**Quota del piano gratuito** (scoperta durante il benchmark, 2026-10-24):
+`gemini-3.5-flash` concede **20 richieste al giorno**; esaurite, ogni chiamata
+dà 429 `RESOURCE_EXHAUSTED` fino a mezzanotte del Pacifico (le 9:00 in Italia).
+I limiti valgono per progetto e si vedono in https://aistudio.google.com/rate-limit.
+Il modello principale diventa quindi **`gemini-3.1-flash-lite`** (quota
+separata; prova reale 6/6 corrette in 1,9–11,8 s, numeri e fonti completi).
+
+**Riserva automatica** (`chatbot.riserva: ollama`, `ClientConRiserva`): se
+Gemini non risponde (quota, rete assente, servizio sovraccarico, timeout) la
+domanda passa al modello locale e la risposta porta un avviso; il principale
+resta a riposo per 5 minuti (6 ore se è finita la quota giornaliera).
+Il benchmark usa `crea_client(..., con_riserva=False)` per misurare un modello
+alla volta.
+
 ## 2. Tool dati (`tools.py`) — lezione 20
 
 Leggono **solo** `data/dashboard_export/*.parquet` e `models/`. Ogni tool:

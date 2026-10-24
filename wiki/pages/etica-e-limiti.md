@@ -66,7 +66,9 @@ finale. Va riportato con parole semplici, senza tecnicismi inutili.
   del piano gratuito i contenuti possono essere usati per migliorare i servizi
   di Google (da ricontrollare nei termini aggiornati). Quindi nessun dato
   personale nelle domande; la barra laterale lo ricorda quando Gemini è attivo.
-  Gli embedding del RAG restano locali (Ollama, `bge-m3`).
+  Gli embedding del RAG restano locali (Ollama, `bge-m3`). Se Gemini non è
+  disponibile, la domanda passa da sola al modello locale (nessun invio)
+  e la risposta lo segnala.
 
 ## Testo breve da mostrare nella pagina del chatbot
 

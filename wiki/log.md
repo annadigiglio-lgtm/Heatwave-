@@ -4218,3 +4218,15 @@ sovraccarichi (504), flash-lite-latest incompatibile con `thinking_budget`
 (contro 42–168 s di Ollama su CPU). Tentativi automatici limitati a 2.
 `chatbot.provider: gemini`; Ollama resta selezionabile nella pagina 10.
 226 test passano.
+
+# 2026-10-24 — quota Gemini, modello lite e riserva automatica
+
+Il benchmark con `gemini-3.5-flash` si è bloccato sulla quota del piano
+gratuito: **20 richieste al giorno** (429 RESOURCE_EXHAUSTED, fino alle 9:00
+italiane); Windows non ha fermato il processo con `timeout` (fermato a mano
+dopo 75 minuti). Modelli "lite" con quota separata: scelto
+`gemini-3.1-flash-lite` (6/6 corrette, 1,9–11,8 s). Nuovo `ClientConRiserva`
+(Gemini, poi Ollama se Gemini non risponde) con avviso nella risposta; messaggio
+dedicato per la quota giornaliera. Benchmark (`tests/chatbot/benchmark.py`,
+criteri oggettivi, 5 test) da eseguire su Ollama. Pagina 10: tab Valutazione
+con metriche e grafico v1 contro v2. 237 test passano.

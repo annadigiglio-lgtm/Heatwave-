@@ -23,6 +23,7 @@ import hashlib
 import math
 import os
 import re
+import time
 from typing import Callable, Protocol, runtime_checkable
 
 import httpx
@@ -502,9 +503,13 @@ def _traduci_errore_gemini(errore: Exception, modello: str, timeout: float) -> L
     codice = getattr(errore, 'code', None)
     testo = str(errore)
     if codice == 429:
+        if 'per day' in testo or 'PerDay' in testo:
+            return LLMNonDisponibile(
+                f'Quota giornaliera gratuita di Gemini esaurita per "{modello}" (piano gratuito): '
+                'si azzera a mezzanotte, ora del Pacifico (le 9:00 in Italia).')
         return LLMNonDisponibile(
-            'Limite del piano gratuito Gemini raggiunto (troppe richieste): attendi circa un minuto '
-            'e riprova, oppure passa al modello locale Ollama nella barra laterale.')
+            'Limite del piano gratuito Gemini raggiunto (troppe richieste al minuto): attendi '
+            'circa un minuto e riprova, oppure passa al modello locale Ollama nella barra laterale.')
     if codice in (401, 403) or 'API key not valid' in testo or 'API_KEY_INVALID' in testo:
         return LLMNonDisponibile('Chiave Gemini non valida: controlla GOOGLE_API_KEY nel file .env.')
     if codice == 404:
@@ -513,6 +518,79 @@ def _traduci_errore_gemini(errore: Exception, modello: str, timeout: float) -> L
     if codice is not None and codice >= 500:
         return LLMNonDisponibile('Servizio Gemini momentaneamente non disponibile: riprova tra poco.')
     return LLMNonDisponibile(f"Errore dell'API Gemini: {testo}")
+
+
+# ---------------------------------------------------------------------------
+# Client con riserva automatica (Gemini -> Ollama)
+# ---------------------------------------------------------------------------
+
+PAUSA_PRINCIPALE_SECONDI = 300.0      # dopo un errore temporaneo si riprova il principale
+PAUSA_QUOTA_GIORNALIERA_SECONDI = 6 * 3600.0
+
+
+class ClientConRiserva:
+    """Usa il client principale (es. Gemini) e, se non è disponibile, la riserva (Ollama).
+
+    Il piano gratuito di Gemini ha una quota giornaliera bassa (20 richieste per
+    alcuni modelli) e durante una demo internet può mancare: in questi casi la
+    domanda viene girata alla riserva locale invece di fallire. Dopo il cambio
+    il principale viene lasciato a riposo (5 minuti per gli errori temporanei,
+    6 ore se è finita la quota giornaliera). Ogni cambio produce un avviso, che
+    l'agente mostra con la risposta (``preleva_avvisi``).
+    """
+
+    def __init__(self, principale: ClientLLM, crea_riserva: Callable[[], ClientLLM],
+                 nome_riserva: str = 'Ollama locale') -> None:
+        self.principale = principale
+        self._crea_riserva = crea_riserva
+        self._riserva: ClientLLM | None = None
+        self.nome_riserva = nome_riserva
+        self._riposo_fino = 0.0
+        self._avvisi: list[str] = []
+
+    @property
+    def riserva(self) -> ClientLLM:
+        if self._riserva is None:
+            self._riserva = self._crea_riserva()
+        return self._riserva
+
+    def in_riserva(self) -> bool:
+        return time.monotonic() < self._riposo_fino
+
+    @property
+    def model(self) -> str:
+        attivo = self.riserva if self.in_riserva() else self.principale
+        return str(getattr(attivo, 'model', '') or type(attivo).__name__)
+
+    def preleva_avvisi(self) -> list[str]:
+        avvisi, self._avvisi = self._avvisi, []
+        return avvisi
+
+    def chiedi(
+        self,
+        messaggi: Messaggi,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        on_token: CallbackToken | None = None,
+    ) -> str:
+        parametri = {'temperature': temperature, 'max_tokens': max_tokens, 'on_token': on_token}
+        if not self.in_riserva():
+            try:
+                return self.principale.chiedi(messaggi, **parametri)
+            except LLMNonDisponibile as errore:
+                giornaliera = 'giornaliera' in str(errore)
+                pausa = PAUSA_QUOTA_GIORNALIERA_SECONDI if giornaliera else PAUSA_PRINCIPALE_SECONDI
+                self._riposo_fino = time.monotonic() + pausa
+                self._avvisi.append(
+                    f'{errore} Risposta generata con il modello di riserva ({self.nome_riserva}), '
+                    'più lento su questo PC.')
+                logger.warning(f'Client principale non disponibile: passo a {self.nome_riserva} '
+                               f'per {pausa / 60:.0f} minuti')
+        return self.riserva.chiedi(messaggi, **parametri)
+
+    def embed(self, testi: list[str]) -> list[list[float]]:
+        """Gli embedding del RAG sono sempre locali (Ollama), come l'indice."""
+        return self.riserva.embed(testi)
 
 
 # ---------------------------------------------------------------------------
@@ -604,7 +682,7 @@ def _fake_attivo() -> bool:
     return os.getenv(VARIABILE_FAKE, '').strip() == '1'
 
 
-def crea_client(provider: str | None = None) -> ClientLLM:
+def crea_client(provider: str | None = None, con_riserva: bool = True) -> ClientLLM:
     """Crea il client per il provider indicato o per ``chatbot.provider``.
 
     Con ``HEATWAVE_FAKE_LLM=1`` restituisce sempre un ``FakeLLM``.
@@ -622,7 +700,11 @@ def crea_client(provider: str | None = None) -> ClientLLM:
     if scelto == 'anthropic':
         return AnthropicClient()
     if scelto == 'gemini':
-        return GeminiClient()
+        client = GeminiClient()
+        riserva = str(config.get('chatbot.riserva', '') or '').strip().lower()
+        if con_riserva and riserva == 'ollama':
+            return ClientConRiserva(client, OllamaClient)
+        return client
     raise ValueError(f'Provider LLM non riconosciuto: "{scelto}" (usa {", ".join(PROVIDER)})')
 
 

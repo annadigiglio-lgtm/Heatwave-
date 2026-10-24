@@ -22,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from components import PROJECT_ROOT
@@ -49,7 +50,8 @@ DOMANDE_ESEMPIO = [
     "In che cluster climatico è Biella e cosa significa?",             # misto (tool + RAG)
     "Domani ci sarà un'ondata di calore a Torino?",                    # rifiuto motivato
 ]
-BENCHMARK_CSV = PROJECT_ROOT / 'output' / 'chatbot_benchmark.csv'
+BENCHMARK_CSV = PROJECT_ROOT / 'data' / 'benchmark' / 'chatbot_benchmark.csv'
+BENCHMARK_RIEPILOGO = PROJECT_ROOT / 'data' / 'benchmark' / 'chatbot_benchmark_riepilogo.csv'
 MAX_CARATTERI_ESTRATTO = 400
 ETICHETTE_PERCORSO = {
     'dati': 'dati (tool sui dati verificati)',
@@ -240,10 +242,37 @@ def mostra_valutazione() -> None:
         return
     try:
         tabella = pd.read_csv(BENCHMARK_CSV)
+        sintesi = pd.read_csv(BENCHMARK_RIEPILOGO) if BENCHMARK_RIEPILOGO.exists() else None
     except (OSError, ValueError, pd.errors.ParserError) as errore:
-        st.error(f'Impossibile leggere `{BENCHMARK_CSV.name}`: {errore}')
+        st.error(f'Impossibile leggere i risultati del benchmark: {errore}')
         return
-    st.dataframe(tabella, hide_index=True, width='stretch')
+
+    if sintesi is not None and not sintesi.empty:
+        colonne = st.columns(len(sintesi))
+        for colonna, (_, riga) in zip(colonne, sintesi.iterrows()):
+            colonna.metric(f"Prompt {riga['versione']}: risposte corrette",
+                           f"{riga['corrette_pct']:.0f}%",
+                           help=f"Modello {riga['modello']}, {int(riga['domande'])} domande")
+            colonna.caption(f"Tempo medio {riga['durata_media_s']:.1f} s · "
+                            f"{riga['chiamate_llm_medie']:.2f} chiamate al modello per domanda")
+        criteri = {'corrette_pct': 'Corrette', 'percorso_ok_pct': 'Percorso giusto',
+                   'tool_ok_pct': 'Tool giusti', 'valori_trovati_pct': 'Numeri attesi presenti',
+                   'rifiuti_ok_pct': 'Rifiuti corretti', 'supportate_pct': 'Numeri supportati'}
+        lungo = sintesi.melt(id_vars='versione', value_vars=[c for c in criteri if c in sintesi],
+                             var_name='criterio', value_name='percentuale')
+        lungo['criterio'] = lungo['criterio'].map(criteri)
+        figura = px.bar(lungo, x='criterio', y='percentuale', color='versione', barmode='group',
+                        range_y=[0, 105], labels={'percentuale': '%', 'criterio': ''},
+                        title='Prompt v1 contro v2 sui criteri del test set')
+        st.plotly_chart(figura, width='stretch')
+
+    st.markdown('**Dettaglio per domanda**')
+    visibili = [c for c in ('versione', 'id', 'categoria', 'domanda', 'corretta', 'percorso',
+                            'tool', 'valori_trovati', 'valori_totali', 'durata_s', 'errore')
+                if c in tabella]
+    st.dataframe(tabella[visibili], hide_index=True, width='stretch')
+    st.caption('Criteri e comando in `tests/chatbot/benchmark.py`; la chiarezza delle risposte '
+               '(scala 1-5) è una valutazione manuale su un campione.')
 
 
 # ---------------------------------------------------------------------------
@@ -283,6 +312,10 @@ with st.sidebar:
     if motore != 'ollama':
         st.caption('🔒 Con questo motore le domande e i dati consultati vengono inviati al '
                    'servizio esterno: non inserire dati personali.')
+        if str(config.get('chatbot.riserva', '') or '').lower() == 'ollama':
+            st.caption('🛟 Se il servizio non risponde (quota giornaliera gratuita finita, rete '
+                       'assente) la risposta arriva dal modello locale Ollama, più lento: la '
+                       'pagina lo segnala.')
     versione = st.selectbox(
         'Versione del prompt', versioni, index=indice_versione,
         help='v1: solo regole; v2: ruolo, esempi di chiamata tool e formato della risposta.',

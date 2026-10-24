@@ -721,3 +721,17 @@ def test_riassunto_risultato_compatto_ed_errori():
     assert testo.count('Nota:') == 3
     assert 'errore - Comune non trovato' in riassunto_risultato('x', {'errore': 'Comune non trovato'})
 
+
+def test_avviso_del_cambio_al_modello_di_riserva():
+    from src.chatbot.llm_client import ClientConRiserva
+
+    class Spento:
+        model = 'gemini-test'
+
+        def chiedi(self, *a, **k):
+            raise LLMNonDisponibile('Quota giornaliera gratuita di Gemini esaurita.')
+
+    client = ClientConRiserva(Spento(), lambda: FakeLLM(['Spiegazione dai documenti. Fonte: faq.']))
+    risposta = esegui_agente('Ciao, come stai?', client=client)
+    assert any('riserva' in a for a in risposta.avvisi)
+
