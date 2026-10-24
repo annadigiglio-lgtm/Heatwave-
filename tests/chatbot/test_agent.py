@@ -130,7 +130,8 @@ def test_b_domanda_metodo_nessun_tool_almeno_una_fonte(tool_finti, rag_finto, ro
     assert risposta.chiamate_llm == 1
     contenuto = llm.chiamate[0][-1]['content']
     assert '[wiki/pages/statistical-analysis.md — Trend]' in contenuto  # contesto RAG nel prompt
-    assert llm.chiamate[0][0]['content'] == prompts.RICERCATORE_PROMPTS['v2']
+    assert llm.chiamate[0][0]['content'] == prompts.SYSTEM_PROMPTS['v2']
+    assert prompts.RICERCATORE_PROMPTS['v2'] in contenuto
 
 
 def test_b_indice_mancante_risposta_onesta_senza_crash(monkeypatch, router_fisso):
@@ -328,7 +329,8 @@ def test_router_di_riserva_llm_se_ambiguo(monkeypatch):
     llm = FakeLLM(['fuori_ambito'])
     assert instrada('Ciao, come stai?', client=llm) == 'fuori_ambito'
     assert len(llm.chiamate) == 1
-    assert llm.chiamate[0][0]['content'] == prompts.PROMPT_ROUTER
+    assert llm.chiamate[0][0]['content'] == prompts.SYSTEM_PROMPTS[prompts.versione_prompt()]
+    assert 'Ciao, come stai?' in llm.chiamate[0][-1]['content']
     assert llm.max_tokens == [agent.MAX_TOKEN_ROUTER]
     assert instrada('Boh', client=FakeLLM(['Non saprei'])) == agent.PERCORSO_DI_RISERVA
 
@@ -412,7 +414,8 @@ def test_revisore_segnala_numero_inventato(tool_finti, router_fisso):
 
     assert numeri_non_supportati(inventata, risposta.tool_chiamati, []) == ['25,3']
     assert risposta.chiamate_llm == 3  # 2 dell'Analista + 1 passaggio correttivo
-    assert llm.chiamate[2][0]['content'] == prompts.PROMPT_REVISORE
+    assert llm.chiamate[2][0]['content'] == llm.chiamate[0][0]['content']  # stesso system
+    assert 'Revisore' in llm.chiamate[2][-1]['content']
     assert any('25,3' in a for a in risposta.avvisi)
 
 
@@ -441,7 +444,7 @@ def test_misto_documenti_e_tool_in_una_risposta(tool_finti, rag_finto, router_fi
     assert risposta.percorso == 'misto'
     assert risposta.chiamate_llm == 2
     assert len(risposta.fonti) == 2 and len(risposta.tool_chiamati) == 1
-    assert 'DOCUMENTI DEL PROGETTO' in llm.chiamate[0][0]['content']
+    assert 'DOCUMENTI DEL PROGETTO' in llm.chiamate[0][-1]['content']
 
 
 # --- Errori e versioni ----------------------------------------------------------
@@ -474,7 +477,7 @@ def test_prompt_version_e_num_predict(tool_finti, router_fisso):
     risposta = esegui_agente('Trend?', client=llm, prompt_version='v1')
     assert risposta.prompt_version == 'v1'
     assert llm.chiamate[0][0]['content'] == prompts.SYSTEM_PROMPTS['v1']
-    assert llm.max_tokens == [300, 300]
+    assert llm.max_tokens == [agent._num_predict()] * 2  # da chatbot.num_predict
     with pytest.raises(ValueError):
         esegui_agente('Trend?', client=llm, prompt_version='v9')
 
@@ -505,7 +508,7 @@ def test_domanda_vuota():
 def test_prompt_contengono_regole_e_tool(versione):
     testo = prompts.SYSTEM_PROMPTS[versione]
     assert prompts.REGOLE_BASE in testo
-    assert prompts.REGOLE_BASE in prompts.RICERCATORE_PROMPTS[versione]
+    assert 'NON usare i tool' in prompts.RICERCATORE_PROMPTS[versione]
     assert 'TOOL: nome_tool' in testo and 'PARAMS:' in testo
     for nome in TOOLS:
         assert nome in testo
@@ -520,3 +523,23 @@ def test_v2_aggiunge_ruolo_esempi_e_formato():
     esempi = [r for r in agent.richieste_tool(prompts.ESEMPI_TOOL)]
     assert len(esempi) == 3 and all(nome in TOOLS and p for nome, p in esempi)
     assert prompts.versione_prompt() == 'v2'
+
+
+# --- Cache del prompt (prestazioni su CPU) ------------------------------------
+
+def test_tutti_i_ruoli_condividono_lo_stesso_system_prompt():
+    """Router, Analista, Ricercatore e Revisore: stesso primo messaggio, così Ollama riusa la cache."""
+    llm = FakeLLM([CHIAMATA_TREND, 'Cresce di 0,45 °C/decennio; il Mann-Kendall è non '
+                                   'parametrico. Fonte: tool e [statistical-analysis]'])
+    esegui_agente('Che trend ha Alessandria e cosa significa?', client=llm)
+    primi = {chiamata[0]['content'] for chiamata in llm.chiamate}
+    assert primi == {prompts.SYSTEM_PROMPTS[prompts.versione_prompt()]}
+
+
+def test_riscalda_modello_usa_il_system_prompt_comune():
+    llm = FakeLLM(['pronto'])
+    durata = agent.riscalda_modello(client=llm, prompt_version='v2')
+    assert durata >= 0
+    assert llm.chiamate[0][0]['content'] == prompts.SYSTEM_PROMPTS['v2']
+    assert llm.max_tokens == [3]
+

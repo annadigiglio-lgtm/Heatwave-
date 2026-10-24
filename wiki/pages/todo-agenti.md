@@ -209,7 +209,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F6 — Agente
 
-### T6.1 🔄 Agente multi-ruolo, memoria, prompt
+### T6.1 ✅ Agente multi-ruolo, memoria, prompt
 - **Dipende da:** T3.1, T4.1, T5.1 · **Corso:** lezioni 15, 20-03, 21-03, 21-05
 - **File:** `src/chatbot/agent.py`, `src/chatbot/memory.py`,
   `src/chatbot/prompts.py`, `tests/chatbot/test_agent.py`
@@ -220,6 +220,16 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   di fila → stop a `max_iterations`; (e) domanda fuori ambito → rifiuto
   senza chiamare l'LLM; (f) la memoria tronca la storia a `memory_window`.
 - **Verifica:** `python -m pytest tests/chatbot/test_agent.py -q`.
+- **Stato (2026-10-24):** codice e 55 test pronti (`agent.py`, `prompts.py`,
+  `memory.py`). Il primo subagente si è bloccato nella prova reale: il client
+  non aveva timeout e ogni ruolo aveva un system prompt diverso (2 minuti di
+  lettura a ogni cambio su CPU). Corretto dal coordinatore: timeout di 180 s,
+  system prompt unico per tutti i ruoli, `riscalda_modello()`, contesto RAG
+  ridotto, risposte massimo 70 parole, `num_predict: 200`.
+- **Prova reale (2026-10-24, qwen2.5:7b su CPU, prompt v2):** 6/6 corrette.
+  Alessandria (dati) 82 s, Cuneo contro Novara (dati) 181 s, Open-Meteo/ARPA (metodo)
+  130 s, Biella (misto) 190 s; previsione e injection rifiutate in 0 s senza LLM.
+  Riscaldamento: 6 s con la cache, 88 s dopo una modifica del prompt.
 
 ## F7 — Interfaccia
 

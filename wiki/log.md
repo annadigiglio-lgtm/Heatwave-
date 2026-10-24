@@ -4151,3 +4151,15 @@ e `bge-m3` (CPU: 6–12 s per risposta a modello caldo, 44 s la prima).
 - **T8.1**: `tests/chatbot/test_set.csv` (28 domande, valori dai tool reali)
   + validazione.
 - **T9.1**: pagina 11 "Etica e limiti" collegata dalla Home.
+
+# 2026-10-24 — T6.1 chiuso: agente funzionante, ottimizzato per CPU
+
+Il subagente di T6.1 si era bloccato nella prova reale. Causa misurata:
+lettura del prompt a circa 12 token/s su CPU (1.406 token = 121 s), con system
+prompt diversi per ogni ruolo, quindi cache di Ollama sempre invalidata;
+client senza timeout. Correzioni: timeout 180 s con messaggio dedicato
+(timeout in lettura distinto da server spento), system prompt unico per
+tutti i ruoli, `riscalda_modello()`, RAG a 3 chunk di circa 120 parole,
+risposte massimo 70 parole, `num_predict: 200`, unità dei "giorni medi annui"
+esplicitate (evitava "da 42,62 a 42,62"). Prova reale 6/6 corretta; tempi
+dati 80–180 s, misto circa 190 s. 174 test passano.

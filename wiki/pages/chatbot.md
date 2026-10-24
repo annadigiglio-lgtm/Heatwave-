@@ -227,14 +227,35 @@ Ollama 0.40.9 su **CPU** (nessuna GPU usata), `qwen2.5:7b`:
 | Risposta di una frase, modello già caricato | 12 s |
 | Embedding `bge-m3` (1 testo) | < 1 s, vettore da 1024 |
 
+Misura di dettaglio (2026-10-24): il PC **legge il prompt a circa 12 token/s**
+e genera a circa 3 token/s.
+
+| Chiamata | Totale | Lettura del prompt |
+|---|---:|---:|
+| Prompt v2 (1.406 token), prima volta | 134 s | 121 s |
+| Stesso prompt, ripetuto | 15 s | 0,3 s (cache di Ollama) |
+
+Ollama riusa la cache solo se **l'inizio della conversazione è identico**
+alla chiamata precedente. Per questo tutti i ruoli (router, analista,
+ricercatore, revisore) usano lo stesso system prompt
+(`SYSTEM_PROMPTS[versione]`); le istruzioni di ruolo stanno nel messaggio
+utente. `agent.riscalda_modello()` paga la lettura lenta una sola volta.
+Contesto RAG ridotto a 3 chunk di circa 120 parole (`top_k: 3`).
+Il client Ollama ha `request_timeout: 180` s: oltre, la pagina mostra
+"il modello non ha risposto" invece di restare appesa.
+
+Prova reale dell'agente (2026-10-24, v2): dati 80–180 s, metodo circa 130 s,
+misto circa 190 s, rifiuti istantanei, risposte corrette 6/6. Il limite è
+l'hardware (circa 3 token/s in generazione su CPU), non il codice.
+
 Conseguenze di progetto (T6.1, T7.1):
 - Il router per parole chiave è obbligatorio: risparmia una chiamata LLM per domanda.
 - Il Revisore è in Python; il secondo passaggio LLM solo se il controllo fallisce.
 - Limitare le risposte (`num_predict` circa 400) e la storia (`memory_window`).
 - Pagina 10: **riscaldamento** del modello all'apertura (una chiamata breve
   in `st.cache_resource`), `keep_alive` lungo (es. `"30m"`) durante la demo,
-  risposta finale in **streaming** (lezione 14-05), `st.status` che mostra
-  i passi mentre l'agente lavora.
+  risposta finale in **streaming** (lezione 14-05, obbligatorio con questi
+  tempi), `st.status` che mostra i passi mentre l'agente lavora.
 - Ripiego documentato: `llama3.2` (3B) è più veloce ma meno affidabile sui tool.
 - Prima della demo: aprire la pagina e fare una domanda di prova, così il
   modello è già caricato.

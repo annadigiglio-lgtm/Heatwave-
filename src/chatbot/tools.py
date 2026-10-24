@@ -299,7 +299,8 @@ def get_temperature_trend(comune: str, anno_inizio: int | None = None, anno_fine
         'giorni_gt_35c_medi_annui': _valore_python(completi['days_gt_35c'].mean()),
     }
     unita = {'pendenza_per_decennio': '°C/decennio', 'temp_media': '°C',
-             'giorni': 'giorni/anno', 'significativo': f'p-value Mann-Kendall < {SOGLIA_SIGNIFICATIVITA}'}
+             'giorni': "giorni/anno, media sull'intero periodo (non è una variazione)",
+             'significativo': f'p-value Mann-Kendall < {SOGLIA_SIGNIFICATIVITA}'}
     return _risultato(valori, unita, FONTE_OPEN_METEO, f'{inizio}-{fine}', note)
 
 

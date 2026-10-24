@@ -261,8 +261,8 @@ def _etichetta_router(risposta: str) -> str:
 
 def _instrada_con_llm(domanda: str, lavoro: _Lavoro) -> str:
     """Router di riserva: una chiamata LLM brevissima (``max_tokens`` 8)."""
-    messaggi = [{'role': 'system', 'content': prompts.PROMPT_ROUTER},
-                {'role': 'user', 'content': domanda}]
+    messaggi = [_system(lavoro),
+                {'role': 'user', 'content': prompts.PROMPT_ROUTER.format(domanda=domanda)}]
     return _etichetta_router(_chiedi(lavoro, messaggi, max_tokens=MAX_TOKEN_ROUTER))
 
 
@@ -429,6 +429,28 @@ def _chiedi(lavoro: _Lavoro, messaggi: list[dict], max_tokens: int | None = None
 # Analista dati: ciclo dei tool
 # ---------------------------------------------------------------------------
 
+def _system(lavoro: _Lavoro) -> dict:
+    """Messaggio di sistema comune a tutti i ruoli (prefisso identico = cache di Ollama)."""
+    return {'role': 'system', 'content': prompts.SYSTEM_PROMPTS[lavoro.versione]}
+
+
+def riscalda_modello(client: ClientLLM | None = None, prompt_version: str | None = None) -> float:
+    """Carica il modello e il system prompt nella cache di Ollama; restituisce i secondi.
+
+    Da chiamare all'apertura della pagina del chatbot (una volta, in
+    ``st.cache_resource``): su CPU la prima lettura del system prompt costa
+    circa 2 minuti, le domande successive la riusano.
+    """
+    inizio = time.perf_counter()
+    lavoro = _Lavoro(client=client or crea_client(),
+                     versione=prompts.versione_prompt(prompt_version))
+    _chiedi(lavoro, [_system(lavoro), {'role': 'user', 'content': 'Rispondi solo: pronto'}],
+            max_tokens=3)
+    durata = time.perf_counter() - inizio
+    logger.info(f'Modello riscaldato in {durata:.1f} s (prompt {lavoro.versione})')
+    return durata
+
+
 def _esegui_tool_sicuro(nome: str, parametri: dict | None) -> dict:
     """Whitelist + ``esegui_tool``; non solleva mai (lezione 20-04)."""
     if nome not in TOOLS:
@@ -454,11 +476,9 @@ def _messaggio_risultati(osservazioni: list[str]) -> str:
 
 def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto: str = '') -> str:
     """Ciclo ``for iterazione in range(max_iterations)`` della lezione 20-03."""
-    system = prompts.SYSTEM_PROMPTS[lavoro.versione]
-    if contesto_misto:
-        system += '\n\n' + prompts.ISTRUZIONI_MISTO.format(contesto=contesto_misto)
-    messaggi = [{'role': 'system', 'content': system}, *storia,
-                {'role': 'user', 'content': domanda}]
+    testo_utente = (prompts.ISTRUZIONI_MISTO.format(contesto=contesto_misto, domanda=domanda)
+                    if contesto_misto else domanda)
+    messaggi = [_system(lavoro), *storia, {'role': 'user', 'content': testo_utente}]
     max_iterazioni = int(config.get('chatbot.max_iterations', MAX_ITERAZIONI_PREDEFINITO))
     gia_eseguiti: dict[str, dict] = {}
     promemoria_inviato = False
@@ -542,10 +562,10 @@ def _ricercatore(domanda: str, lavoro: _Lavoro, storia: list[dict]) -> str:
     risultati = _recupera(_domanda_per_ricerca(domanda, storia), lavoro, top_k)
     if risultati is None:
         return prompts.RISPOSTA_INDICE_MANCANTE
-    contenuto = prompts.MESSAGGIO_RICERCATORE.format(contesto=formatta_contesto(risultati),
-                                                     domanda=domanda)
-    messaggi = [{'role': 'system', 'content': prompts.RICERCATORE_PROMPTS[lavoro.versione]},
-                *storia, {'role': 'user', 'content': contenuto}]
+    contenuto = prompts.MESSAGGIO_RICERCATORE.format(
+        istruzioni=prompts.RICERCATORE_PROMPTS[lavoro.versione],
+        contesto=formatta_contesto(_accorcia(risultati)), domanda=domanda)
+    messaggi = [_system(lavoro), *storia, {'role': 'user', 'content': contenuto}]
     return _chiedi(lavoro, messaggi)
 
 
@@ -661,8 +681,9 @@ def _revisore(domanda: str, testo: str, percorso: str, lavoro: _Lavoro) -> str:
         contenuto = prompts.MESSAGGIO_REVISORE.format(
             domanda=domanda, dati=_dati_per_revisore(lavoro), risposta=testo,
             numeri=', '.join(mancanti))
-        corretta = _chiedi(lavoro, [{'role': 'system', 'content': prompts.PROMPT_REVISORE},
-                                    {'role': 'user', 'content': contenuto}])
+        corretta = _chiedi(lavoro, [_system(lavoro),
+                                    {'role': 'user',
+                                     'content': prompts.PROMPT_REVISORE + '\n\n' + contenuto}])
         if corretta and not richieste_tool(corretta):
             ancora = numeri_non_supportati(corretta, lavoro.tool_chiamati, lavoro.chunk, domanda)
             if len(ancora) <= len(mancanti):

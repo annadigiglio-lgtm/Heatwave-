@@ -121,6 +121,7 @@ chatbot:
   anthropic_model: ""           # da impostare solo se provider = anthropic
   temperature: 0.2
   max_iterations: 5             # limite del ciclo dell'agente
+  num_predict: 200              # token massimi per risposta: su questo PC si generano ~3 token/s
   request_timeout: 180          # secondi massimi di attesa di una risposta LLM
   keep_alive: "30m"             # tiene il modello in RAM tra le domande (prima chiamata su CPU: ~44 s)
   memory_window: 6              # ultimi N scambi passati all'LLM
@@ -131,4 +132,4 @@ chatbot:
     embedding_model: "bge-m3"             # modello di embedding multilingue servito da Ollama
     chunk_words: 300
     overlap_words: 50
-    top_k: 4
+    top_k: 3                    # 3 chunk accorciati a ~120 parole: su CPU ogni token di contesto costa
