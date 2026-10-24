@@ -233,7 +233,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 
 ## F7 — Interfaccia
 
-### T7.1 ⬜ Pagina "Assistente climatico"
+### T7.1 ✅ Pagina "Assistente climatico"
 - **Dipende da:** T6.1 · **Corso:** lezioni 13-06…08, 14-05 (streaming), 14-07
 - **File:** `dashboard/pages/10_assistente_climatico.py`, `dashboard/Home.py`
 - **Fare:** [Chatbot §7](chatbot.md),

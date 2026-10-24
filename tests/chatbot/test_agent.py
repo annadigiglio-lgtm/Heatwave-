@@ -543,3 +543,104 @@ def test_riscalda_modello_usa_il_system_prompt_comune():
     assert llm.chiamate[0][0]['content'] == prompts.SYSTEM_PROMPTS['v2']
     assert llm.max_tokens == [3]
 
+
+# --- Avanzamento e streaming per la pagina 10 (T7.1) ----------------------------
+
+FINALE_DATI = 'Ad Alessandria la temperatura cresce di 0,45 °C per decennio. Fonte: Open-Meteo.'
+
+
+def test_on_token_riceve_solo_la_risposta_finale(tool_finti, router_fisso):
+    router_fisso('dati')
+    pezzi = []
+    risposta = esegui_agente('Trend ad Alessandria?', client=FakeLLM([CHIAMATA_TREND, FINALE_DATI]),
+                             on_token=pezzi.append)
+    streammato = ''.join(pezzi)
+    assert 'TOOL' not in streammato and 'PARAMS' not in streammato
+    assert streammato.strip() == FINALE_DATI == risposta.testo
+    assert len(pezzi) > 1
+
+
+def test_on_evento_riceve_percorso_tool_e_revisore(tool_finti, router_fisso):
+    router_fisso('dati')
+    eventi = []
+    esegui_agente('Trend ad Alessandria?', client=FakeLLM([CHIAMATA_TREND, FINALE_DATI]),
+                  on_evento=eventi.append)
+    assert eventi[0] == 'Percorso: dati'
+    assert any(e.startswith(agent.PREFISSO_EVENTO_TOOL)
+               and 'get_temperature_trend(comune=Alessandria)' in e for e in eventi)
+    assert 'Controllo i numeri della risposta…' in eventi
+
+
+@pytest.mark.parametrize('percorso', ['dati', 'metodo', 'misto'])
+def test_risultato_identico_con_e_senza_callback(tool_finti, rag_finto, router_fisso, percorso):
+    router_fisso(percorso)
+    risposte = [CHIAMATA_TREND, 'Cresce di 0,45 °C/decennio; il Mann-Kendall è non parametrico. '
+                                'Fonte: [statistical-analysis]']
+    if percorso == 'metodo':
+        risposte = risposte[1:]
+    senza = esegui_agente('Trend ad Alessandria e cosa significa?', client=FakeLLM(risposte))
+    con = esegui_agente('Trend ad Alessandria e cosa significa?', client=FakeLLM(risposte),
+                        on_evento=lambda e: None, on_token=lambda t: None)
+    assert (con.testo, con.percorso, con.tool_chiamati, con.fonti, con.avvisi, con.chiamate_llm) == (
+        senza.testo, senza.percorso, senza.tool_chiamati, senza.fonti, senza.avvisi,
+        senza.chiamate_llm)
+
+
+def test_ricercatore_streamma_e_cerca_nei_documenti(rag_finto, router_fisso):
+    router_fisso('metodo')
+    testo = 'Il Mann-Kendall è un test non parametrico. Fonte: [statistical-analysis]'
+    pezzi, eventi = [], []
+    risposta = esegui_agente('Come funziona il Mann-Kendall?', client=FakeLLM([testo]),
+                             on_token=pezzi.append, on_evento=eventi.append)
+    assert ''.join(pezzi) == testo == risposta.testo
+    assert 'Percorso: metodo' in eventi and 'Cerco nei documenti del progetto…' in eventi
+
+
+def test_rifiuto_senza_token_e_con_percorso():
+    pezzi, eventi = [], []
+    risposta = esegui_agente('Mi dai la ricetta della bagna cauda?', client=FakeLLM(['x']),
+                             on_token=pezzi.append, on_evento=eventi.append)
+    assert risposta.percorso == 'fuori_ambito' and pezzi == []
+    assert eventi == ['Percorso: fuori_ambito']
+
+
+def test_promemoria_non_viene_streammato(tool_finti, router_fisso):
+    router_fisso('dati')
+    pezzi = []
+    esegui_agente('Trend ad Alessandria?', on_token=pezzi.append,
+                  client=FakeLLM(['Ad Alessandria fa caldo.', CHIAMATA_TREND, FINALE_DATI]))
+    assert 'fa caldo' not in ''.join(pezzi) and ''.join(pezzi).strip() == FINALE_DATI
+
+
+def test_client_senza_on_token_riceve_il_testo_in_un_pezzo(tool_finti, router_fisso):
+    router_fisso('dati')
+
+    class ClientSenzaStreaming:
+        def __init__(self):
+            self.risposte = [CHIAMATA_TREND, FINALE_DATI]
+
+        def chiedi(self, messaggi, temperature=None, max_tokens=None):
+            return self.risposte.pop(0)
+
+    pezzi = []
+    esegui_agente('Trend?', client=ClientSenzaStreaming(), on_token=pezzi.append)
+    assert pezzi == [FINALE_DATI]
+
+
+@pytest.mark.parametrize('testo, inoltrato', [
+    ('TOOL: get_temperature_trend\nPARAMS: {"comune": "Torino"}', False),
+    ('  ```\ntool: get_temperature_trend\nPARAMS: {}```', False),
+    ('**TOOL**: get_heatwave_summary', False),
+    ('{"tool": "get_temperature_trend", "params": {"comune": "Asti"}}', False),
+    ('Torino si è scaldata.', True),
+    ('To', True),            # risposta brevissima: decisa alla chiusura
+    ('Sì.', True),
+])
+def test_filtro_streaming(testo, inoltrato):
+    ricevuti = []
+    filtro = agent._FiltroStreaming(ricevuti.append)
+    for carattere in testo:   # un carattere alla volta: il caso più difficile
+        filtro(carattere)
+    filtro.chiudi(testo)
+    assert (''.join(ricevuti) == testo) is inoltrato
+    assert inoltrato or ricevuti == []

@@ -4163,3 +4163,14 @@ tutti i ruoli, `riscalda_modello()`, RAG a 3 chunk di circa 120 parole,
 risposte massimo 70 parole, `num_predict: 200`, unità dei "giorni medi annui"
 esplicitate (evitava "da 42,62 a 42,62"). Prova reale 6/6 corretta; tempi
 dati 80–180 s, misto circa 190 s. 174 test passano.
+
+# 2026-10-24 — T7.1: pagina "Assistente climatico"
+
+`dashboard/pages/10_assistente_climatico.py` (subagente): streaming della
+risposta finale (`on_token`, filtro che non mostra le richieste TOOL),
+`st.status` con gli eventi dell'agente (`on_evento`), riscaldamento in
+`st.cache_resource`, memoria in `st.session_state`, expander "Come ho
+ragionato", errori `LLMNonDisponibile` senza traceback, input disabilitato se
+l'LLM non è pronto, tab Valutazione. Link dalla Home. 197 test passano.
+Nota: cambiare versione del prompt costa un nuovo riscaldamento (Ollama
+tiene in cache un solo prefisso).

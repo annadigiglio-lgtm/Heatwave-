@@ -261,3 +261,61 @@ def test_stato_llm_non_solleva_mai(monkeypatch):
 def test_stato_llm_fake(monkeypatch):
     monkeypatch.setenv('HEATWAVE_FAKE_LLM', '1')
     assert stato_llm()[0] is True
+
+
+# --- Streaming (T7.1, lezione 14-05) ------------------------------------------
+
+def _parti_stream(*pezzi):
+    return [ollama.ChatResponse(message=ollama.Message(role='assistant', content=p)) for p in pezzi]
+
+
+def test_ollama_streaming_chiama_on_token_e_restituisce_il_testo_completo():
+    finto = MagicMock()
+    finto.chat.return_value = iter(_parti_stream('Ad ', 'Alessandria ', '', 'fa caldo.'))
+    client = OllamaClient(model='m', client=finto)
+    ricevuti = []
+
+    assert client.chiedi(MESSAGGI, on_token=ricevuti.append) == 'Ad Alessandria fa caldo.'
+    assert ricevuti == ['Ad ', 'Alessandria ', 'fa caldo.']  # i pezzi vuoti non arrivano
+    kwargs = finto.chat.call_args.kwargs
+    assert kwargs['stream'] is True
+    assert kwargs['messages'] == MESSAGGI and kwargs['model'] == 'm'
+
+
+def test_ollama_senza_on_token_non_usa_lo_stream():
+    finto = _client_ollama_finto('Ciao!')
+    assert OllamaClient(model='m', client=finto).chiedi(MESSAGGI) == 'Ciao!'
+    assert 'stream' not in finto.chat.call_args.kwargs
+
+
+def test_ollama_errore_durante_lo_stream_diventa_llm_non_disponibile():
+    def stream_interrotto():
+        yield from _parti_stream('Inizio ')
+        raise httpx.ReadTimeout('lento')
+
+    finto = MagicMock()
+    finto.chat.return_value = stream_interrotto()
+    ricevuti = []
+    with pytest.raises(LLMNonDisponibile, match='non ha risposto'):
+        OllamaClient(model='m', client=finto, timeout=180).chiedi(MESSAGGI, on_token=ricevuti.append)
+    assert ricevuti == ['Inizio ']
+
+
+def test_fake_streamma_a_pezzi():
+    testo = 'Cresce di 0,45 °C per decennio.\nFonte: Open-Meteo.'
+    fake = FakeLLM([testo])
+    ricevuti = []
+
+    assert fake.chiedi([{'role': 'user', 'content': 'a'}], on_token=ricevuti.append) == testo
+    assert len(ricevuti) > 1 and ''.join(ricevuti) == testo
+
+
+def test_anthropic_on_token_riceve_il_testo_intero():
+    finto = MagicMock()
+    finto.messages.create.return_value = SimpleNamespace(
+        content=[SimpleNamespace(type='text', text='Risposta')]
+    )
+    ricevuti = []
+    client = AnthropicClient(model='claude-modello-test', client=finto)
+    assert client.chiedi(MESSAGGI, on_token=ricevuti.append) == 'Risposta'
+    assert ricevuti == ['Risposta']

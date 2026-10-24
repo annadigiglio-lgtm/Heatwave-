@@ -11,6 +11,10 @@ Anthropic si legge solo dall'ambiente (``.env``, caricato da
 
 Per i test e gli smoke test delle pagine c'è ``FakeLLM``, che non usa la rete;
 ``crea_client()`` lo restituisce se ``HEATWAVE_FAKE_LLM=1``.
+
+Streaming (lezione 14-05): ``chiedi(..., on_token=f)`` chiama ``f(pezzo)`` per
+ogni pezzo di testo appena generato e restituisce comunque il testo completo.
+Senza ``on_token`` il comportamento è quello di sempre (una sola risposta).
 """
 
 from __future__ import annotations
@@ -42,6 +46,7 @@ RISPOSTA_FAKE_PREDEFINITA = 'Risposta di prova del FakeLLM.'
 
 Messaggi = list[dict]
 FunzioneEmbedding = Callable[[list[str]], list[list[float]]]
+CallbackToken = Callable[[str], None]
 
 
 class LLMNonDisponibile(Exception):
@@ -53,11 +58,16 @@ class ClientLLM(Protocol):
     """Interfaccia comune a tutti i client LLM del progetto."""
 
     def chiedi(
-        self, messaggi: Messaggi, temperature: float | None = None, max_tokens: int | None = None
+        self,
+        messaggi: Messaggi,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        on_token: CallbackToken | None = None,
     ) -> str:
         """Invia una conversazione e restituisce il testo della risposta.
 
-        ``max_tokens`` (facoltativo) limita la lunghezza della risposta.
+        ``max_tokens`` (facoltativo) limita la lunghezza della risposta;
+        ``on_token`` (facoltativo) riceve i pezzi del testo man mano.
         """
         ...
 
@@ -203,27 +213,46 @@ class OllamaClient:
         self._client = client or ollama.Client(host=self.host, timeout=self.timeout)
 
     def chiedi(
-        self, messaggi: Messaggi, temperature: float | None = None, max_tokens: int | None = None
+        self,
+        messaggi: Messaggi,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        on_token: CallbackToken | None = None,
     ) -> str:
         """Invia i messaggi a ``ollama.chat`` e restituisce il testo.
 
-        ``max_tokens`` diventa l'opzione Ollama ``num_predict``.
+        ``max_tokens`` diventa l'opzione Ollama ``num_predict``. Con
+        ``on_token`` la chiamata usa ``stream=True`` (lezione 14-05): ogni
+        pezzo generato va subito a ``on_token`` e alla fine si restituisce
+        il testo completo, identico a quello senza streaming.
         """
         _valida_messaggi(messaggi)
         opzioni: dict = {'temperature': _temperatura(temperature)}
         if max_tokens is not None:
             opzioni['num_predict'] = int(max_tokens)
+        parametri = {
+            'model': self.model,
+            'messages': messaggi,
+            'options': opzioni,
+            'keep_alive': self.keep_alive,
+        }
         try:
-            risposta = self._client.chat(
-                model=self.model,
-                messages=messaggi,
-                options=opzioni,
-                keep_alive=self.keep_alive,
-            )
+            if on_token is None:
+                risposta = self._client.chat(**parametri)
+                return risposta.message.content or ''
+            pezzi: list[str] = []
+            # Lo stream è un generatore: gli errori di rete possono arrivare
+            # anche durante la lettura, quindi il ciclo sta dentro il try.
+            for parte in self._client.chat(**parametri, stream=True):
+                messaggio = getattr(parte, 'message', None)
+                pezzo = (getattr(messaggio, 'content', '') if messaggio is not None else '') or ''
+                if pezzo:
+                    pezzi.append(pezzo)
+                    on_token(pezzo)
+            return ''.join(pezzi)
         except (ConnectionError, httpx.TransportError, ollama.ResponseError) as errore:
             logger.warning(f'Chat Ollama fallita: {errore}')
             raise _traduci_errore_ollama(errore, self.model, self.host, self.timeout) from errore
-        return risposta.message.content or ''
 
     def embed(self, testi: list[str]) -> list[list[float]]:
         """Calcola gli embedding con ``ollama.embed``, a blocchi di 32 testi."""
@@ -285,9 +314,17 @@ class AnthropicClient:
         self._client = anthropic.Anthropic(api_key=chiave)
 
     def chiedi(
-        self, messaggi: Messaggi, temperature: float | None = None, max_tokens: int | None = None
+        self,
+        messaggi: Messaggi,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        on_token: CallbackToken | None = None,
     ) -> str:
-        """Invia i messaggi a ``messages.create`` con il system prompt separato."""
+        """Invia i messaggi a ``messages.create`` con il system prompt separato.
+
+        Nessuno streaming vero (provider facoltativo): se c'è ``on_token``
+        riceve il testo intero in un solo pezzo.
+        """
         _valida_messaggi(messaggi)
         system, conversazione = _separa_system(messaggi)
         parametri = {
@@ -303,9 +340,12 @@ class AnthropicClient:
         except Exception as errore:
             logger.warning(f'Chiamata Anthropic fallita: {errore}')
             raise _traduci_errore_anthropic(errore, self.model) from errore
-        return ''.join(
+        testo = ''.join(
             blocco.text for blocco in risposta.content if getattr(blocco, 'type', '') == 'text'
         )
+        if on_token is not None and testo:
+            on_token(testo)
+        return testo
 
     def embed(self, testi: list[str]) -> list[list[float]]:
         """Non supportato: gli embedding del progetto usano sempre Ollama."""
@@ -355,6 +395,11 @@ def embedding_bag_of_words(
     return vettori
 
 
+def pezzi_di_testo(testo: str) -> list[str]:
+    """Divide un testo in pezzi "parola + spazi"; unendoli si riottiene il testo."""
+    return re.findall(r'\s+|\S+\s*', testo or '')
+
+
 class FakeLLM:
     """LLM finto: risposte predefinite in sequenza, nessuna rete.
 
@@ -378,15 +423,26 @@ class FakeLLM:
         self._indice = 0
 
     def chiedi(
-        self, messaggi: Messaggi, temperature: float | None = None, max_tokens: int | None = None
+        self,
+        messaggi: Messaggi,
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+        on_token: CallbackToken | None = None,
     ) -> str:
-        """Restituisce la prossima risposta e registra i messaggi ricevuti."""
+        """Restituisce la prossima risposta e registra i messaggi ricevuti.
+
+        Con ``on_token`` "streamma" la risposta a pezzi (una parola con gli
+        spazi che la seguono), come farebbe Ollama.
+        """
         _valida_messaggi(messaggi)
         self.chiamate.append([dict(m) for m in messaggi])
         self.temperature.append(temperature)
         self.max_tokens.append(max_tokens)
         risposta = self.risposte[min(self._indice, len(self.risposte) - 1)]
         self._indice += 1
+        if on_token is not None:
+            for pezzo in pezzi_di_testo(risposta):
+                on_token(pezzo)
         return risposta
 
     def embed(self, testi: list[str]) -> list[list[float]]:

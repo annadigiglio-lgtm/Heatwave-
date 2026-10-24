@@ -5,7 +5,7 @@ Entry point Streamlit. Le altre pagine sono in `pages/` (convenzione
 multipage di Streamlit): 02_analisi_temporale, 03_analisi_spaziale,
 04_ondate_di_calore, 05_contesto_territoriale, 06_sintesi_della_ricerca,
 07_download_dati, 08_citazioni_e_fonti, 09_machine_learning,
-11_etica_e_limiti.
+10_assistente_climatico, 11_etica_e_limiti.
 
 Usage:
     streamlit run dashboard/Home.py
@@ -275,6 +275,14 @@ st.caption(
     "k, il silhouette score e i limiti del modello."
 )
 st.page_link("pages/09_machine_learning.py", label="Apri Machine Learning →")
+
+st.subheader("Assistente climatico")
+st.caption(
+    "Fai domande in italiano su temperature, ondate di calore, trend e metodi: "
+    "un assistente AI risponde usando solo i dati e i documenti del progetto, "
+    "mostrando tool chiamati e fonti."
+)
+st.page_link("pages/10_assistente_climatico.py", label="Apri l'Assistente climatico →")
 
 st.subheader("Etica, privacy e limiti")
 st.caption(

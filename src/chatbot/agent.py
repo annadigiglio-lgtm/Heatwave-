@@ -38,6 +38,23 @@ Scelte legate alle prestazioni (qwen2.5:7b su CPU, 6-12 s per chiamata):
 
 Privacy (wiki/pages/etica-e-limiti.md): nei log non finisce mai il testo
 dell'utente, solo la lunghezza, il percorso e i nomi dei tool.
+
+Avanzamento e streaming per la pagina Streamlit (lezione 14-05):
+``esegui_agente(..., on_evento=f, on_token=g)``. ``on_evento`` riceve frasi
+brevi sui passi ("Percorso: dati", "Chiamo get_temperature_trend(...)…");
+``on_token`` riceve i pezzi della **sola risposta candidata finale**:
+
+- l'Analista non sa in anticipo se l'LLM chiederà un tool, quindi i primi
+  caratteri passano da ``_FiltroStreaming``: se il testo (tolti spazi,
+  backtick, asterischi e virgolette) comincia con ``TOOL`` o con ``{`` (formato
+  JSON) non si inoltra nulla; altrimenti si inoltra tutto da lì in poi;
+- le chiamate che non possono essere la risposta finale non vengono mai
+  streammate: router LLM, primo giro dell'Analista che riceverebbe il
+  promemoria "chiama un tool", passaggio correttivo del Revisore;
+- se una risposta già streammata contiene più avanti una richiesta di tool,
+  l'evento successivo comincia con ``PREFISSO_EVENTO_TOOL``: la pagina
+  svuota il testo mostrato. In ogni caso la pagina, alla fine, sostituisce
+  il testo con ``RispostaAgente.testo`` (il Revisore può averlo corretto).
 """
 
 from __future__ import annotations
@@ -49,7 +66,7 @@ import re
 import time
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import Any
+from typing import Any, Callable
 
 from src.chatbot import prompts
 from src.chatbot import tools as modulo_tools
@@ -73,6 +90,10 @@ MAX_TOOL_PER_RISPOSTA = 2
 MAX_CARATTERI_DATI_REVISORE = 6000
 PERCORSO_DI_RISERVA = 'metodo'
 SEGNAPOSTO_INJECTION = '[richiesta non ammessa, rifiutata]'
+PREFISSO_EVENTO_TOOL = 'Chiamo '
+MAX_CARATTERI_PARAMETRO_EVENTO = 40
+
+CallbackTesto = Callable[[str], None]
 
 # Numeri sempre ammessi nelle risposte: periodo dei dati e soglie del progetto.
 NUMERI_SEMPRE_AMMESSI = (2000.0, 2026.0, 35.0, 30.0, 3.0, 0.05, 1.5)
@@ -102,6 +123,23 @@ class _Lavoro:
     chunk: list[dict] = field(default_factory=list)
     avvisi: list[str] = field(default_factory=list)
     chiamate_llm: int = 0
+    on_evento: CallbackTesto | None = None
+    on_token: CallbackTesto | None = None
+
+
+def _evento(lavoro: _Lavoro, messaggio: str) -> None:
+    """Passo di avanzamento per la pagina (``st.status``); niente se non c'è callback."""
+    if lavoro.on_evento is not None:
+        lavoro.on_evento(messaggio)
+
+
+def _descrivi_chiamata(nome: str, parametri: dict | None) -> str:
+    """``get_temperature_trend(comune=Alessandria)``: forma breve per l'evento."""
+    if not isinstance(parametri, dict):
+        return f'{nome}(parametri non validi)'
+    argomenti = ', '.join(f'{k}={str(v)[:MAX_CARATTERI_PARAMETRO_EVENTO]}'
+                          for k, v in parametri.items())
+    return f'{nome}({argomenti})'
 
 
 # ---------------------------------------------------------------------------
@@ -412,17 +450,81 @@ def _accetta_max_tokens(tipo: type) -> bool:
         return False
 
 
-def _chiedi(lavoro: _Lavoro, messaggi: list[dict], max_tokens: int | None = None) -> str:
-    """Una chiamata LLM: crea il client solo se serve e conta le chiamate."""
+@lru_cache(maxsize=16)
+def _accetta_on_token(tipo: type) -> bool:
+    """Vero se ``chiedi()`` del client accetta ``on_token`` (streaming)."""
+    try:
+        return 'on_token' in inspect.signature(tipo.chiedi).parameters
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
+def _chiedi(lavoro: _Lavoro, messaggi: list[dict], max_tokens: int | None = None,
+            on_token: CallbackTesto | None = None) -> str:
+    """Una chiamata LLM: crea il client solo se serve e conta le chiamate.
+
+    Con ``on_token`` e un client che non fa streaming, il testo intero arriva
+    a ``on_token`` in un solo pezzo alla fine.
+    """
     if lavoro.client is None:
         lavoro.client = crea_client()
     lavoro.chiamate_llm += 1
     limite = max_tokens if max_tokens is not None else _num_predict()
+    parametri: dict = {}
     if _accetta_max_tokens(type(lavoro.client)):
-        risposta = lavoro.client.chiedi(messaggi, max_tokens=limite)
-    else:
-        risposta = lavoro.client.chiedi(messaggi)
-    return (risposta or '').strip()
+        parametri['max_tokens'] = limite
+    streaming = on_token is not None and _accetta_on_token(type(lavoro.client))
+    if streaming:
+        parametri['on_token'] = on_token
+    risposta = lavoro.client.chiedi(messaggi, **parametri) or ''
+    if on_token is not None and not streaming and risposta:
+        on_token(risposta)
+    return risposta.strip()
+
+
+class _FiltroStreaming:
+    """Inoltra i token a ``destinazione`` solo se la risposta non è una richiesta di tool.
+
+    Tiene da parte i primi caratteri finché non può decidere: tolti spazi,
+    backtick, asterischi e virgolette, se il testo comincia con ``TOOL`` (o con
+    ``{``, il formato JSON di riserva) non inoltra nulla; appena il prefisso
+    non può più diventare ``TOOL`` inoltra quanto tenuto da parte e poi ogni
+    pezzo. Bastano 4 caratteri utili: la decisione arriva quasi subito.
+    """
+
+    _DA_IGNORARE = ' \t\r\n`*"\''
+
+    def __init__(self, destinazione: CallbackTesto) -> None:
+        self.destinazione = destinazione
+        self.buffer = ''
+        self.stato = 'attesa'  # attesa | inoltro | bloccato
+        self.inoltrato = False
+
+    def __call__(self, pezzo: str) -> None:
+        if self.stato == 'bloccato' or not pezzo:
+            return
+        if self.stato == 'inoltro':
+            self._invia(pezzo)
+            return
+        self.buffer += pezzo
+        utile = self.buffer.lstrip(self._DA_IGNORARE)
+        if utile.startswith('{') or utile[:4].upper() == 'TOOL':
+            self.stato = 'bloccato'
+        elif utile and not 'TOOL'.startswith(utile[:4].upper()):
+            self.stato = 'inoltro'
+            self._invia(self.buffer)
+            self.buffer = ''
+
+    def chiudi(self, testo_completo: str) -> None:
+        """Fine della risposta: inoltra il resto se non era una richiesta di tool."""
+        if self.stato == 'attesa' and self.buffer and not richieste_tool(testo_completo):
+            self.stato = 'inoltro'
+            self._invia(self.buffer)
+        self.buffer = ''
+
+    def _invia(self, testo: str) -> None:
+        self.inoltrato = True
+        self.destinazione(testo)
 
 
 # ---------------------------------------------------------------------------
@@ -484,7 +586,17 @@ def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto:
     promemoria_inviato = False
 
     for iterazione in range(max_iterazioni):
-        risposta = _chiedi(lavoro, messaggi)
+        _evento(lavoro, 'Il modello sceglie i dati da consultare…' if not lavoro.tool_chiamati
+                else 'Il modello legge i risultati e scrive la risposta…')
+        # Senza tool già chiamati, una risposta senza tool riceverebbe il
+        # promemoria: non può essere quella finale, quindi non si streamma.
+        avra_promemoria = (not lavoro.tool_chiamati and not promemoria_inviato
+                           and iterazione + 1 < max_iterazioni)
+        filtro = (_FiltroStreaming(lavoro.on_token)
+                  if lavoro.on_token is not None and not avra_promemoria else None)
+        risposta = _chiedi(lavoro, messaggi, on_token=filtro)
+        if filtro is not None:
+            filtro.chiudi(risposta)
         richieste = richieste_tool(risposta)
         if not richieste:
             if not lavoro.tool_chiamati and not promemoria_inviato and iterazione + 1 < max_iterazioni:
@@ -505,6 +617,7 @@ def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto:
                 osservazioni.append(f'Risultato del tool {nome} (già fornito): '
                                     f'{_json(risultato)}')
                 continue
+            _evento(lavoro, f'{PREFISSO_EVENTO_TOOL}{_descrivi_chiamata(nome, parametri)}…')
             risultato = _esegui_tool_sicuro(nome, parametri)
             gia_eseguiti[chiave] = risultato
             lavoro.tool_chiamati.append({'nome': nome, 'parametri': parametri or {},
@@ -527,6 +640,7 @@ def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto:
 
 def _recupera(domanda: str, lavoro: _Lavoro, k: int) -> list[dict] | None:
     """``cerca_documenti`` senza crash: ``None`` (con avviso) se l'indice non è usabile."""
+    _evento(lavoro, 'Cerco nei documenti del progetto…')
     try:
         risultati = cerca_documenti(domanda, k=k)
     except FileNotFoundError:
@@ -566,7 +680,8 @@ def _ricercatore(domanda: str, lavoro: _Lavoro, storia: list[dict]) -> str:
         istruzioni=prompts.RICERCATORE_PROMPTS[lavoro.versione],
         contesto=formatta_contesto(_accorcia(risultati)), domanda=domanda)
     messaggi = [_system(lavoro), *storia, {'role': 'user', 'content': contenuto}]
-    return _chiedi(lavoro, messaggi)
+    _evento(lavoro, f'Trovati {len(risultati)} documenti: il modello scrive la risposta…')
+    return _chiedi(lavoro, messaggi, on_token=lavoro.on_token)
 
 
 def _accorcia(risultati: list[dict], parole: int = PAROLE_CHUNK_MISTO) -> list[dict]:
@@ -671,6 +786,7 @@ def _revisore(domanda: str, testo: str, percorso: str, lavoro: _Lavoro) -> str:
     sistema l'errore); se la correzione non basta, si tiene la risposta
     migliore e si aggiunge un avviso di incertezza, così l'utente è avvisato.
     """
+    _evento(lavoro, 'Controllo i numeri della risposta…')
     if percorso in ('metodo', 'misto') and not lavoro.chunk:
         lavoro.avvisi.append(prompts.AVVISO_SENZA_FONTI)
     mancanti = numeri_non_supportati(testo, lavoro.tool_chiamati, lavoro.chunk, domanda)
@@ -678,6 +794,7 @@ def _revisore(domanda: str, testo: str, percorso: str, lavoro: _Lavoro) -> str:
         return testo
     logger.info(f'Revisore: {len(mancanti)} numeri non supportati')
     if lavoro.tool_chiamati or lavoro.chunk:
+        _evento(lavoro, f'Numeri non trovati nei dati ({", ".join(mancanti)}): chiedo una correzione…')
         contenuto = prompts.MESSAGGIO_REVISORE.format(
             domanda=domanda, dati=_dati_per_revisore(lavoro), risposta=testo,
             numeri=', '.join(mancanti))
@@ -714,6 +831,8 @@ def esegui_agente(
     memoria: MemoriaConversazione | None = None,
     client: ClientLLM | None = None,
     prompt_version: str | None = None,
+    on_evento: CallbackTesto | None = None,
+    on_token: CallbackTesto | None = None,
 ) -> RispostaAgente:
     """Risponde a una domanda passando per router, ruoli e Revisore.
 
@@ -721,10 +840,14 @@ def esegui_agente(
     avvisi); propaga invece ``LLMNonDisponibile``, che la pagina Streamlit
     mostra con le istruzioni per avviare Ollama. Se ``memoria`` è data, la
     domanda e la risposta vengono aggiunte alla storia.
+
+    ``on_evento`` riceve i passi di avanzamento, ``on_token`` i pezzi della
+    risposta finale mentre l'LLM la genera (vedi la docstring del modulo).
+    Il risultato è identico con o senza callback.
     """
     inizio = time.perf_counter()
     versione = prompts.versione_prompt(prompt_version)
-    lavoro = _Lavoro(client=client, versione=versione)
+    lavoro = _Lavoro(client=client, versione=versione, on_evento=on_evento, on_token=on_token)
     storia = memoria.messaggi() if memoria is not None else []
     domanda = (domanda or '').strip()
     logger.info(f'Domanda ricevuta ({len(domanda)} caratteri), prompt {versione}')
@@ -736,9 +859,11 @@ def esegui_agente(
     else:
         percorso, motivo = _classifica_per_regole(domanda)
         if percorso is None:
+            _evento(lavoro, 'Domanda ambigua: chiedo al modello di classificarla…')
             percorso = _instrada_con_llm(domanda, lavoro)
             motivo = 'generico'
         testo = ''
+    _evento(lavoro, f'Percorso: {percorso}')
 
     if percorso == 'fuori_ambito' and domanda:
         testo = prompts.RIFIUTI.get(motivo or 'generico', prompts.RIFIUTI['generico'])

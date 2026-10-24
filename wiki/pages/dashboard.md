@@ -26,7 +26,7 @@ Dopo un aggiornamento dei dati: `python -m src.data_processing.refresh_dashboard
 | `07_download_dati.py` | export CSV | ✅ |
 | `08_citazioni_e_fonti.py` | bibliografia e fonti dati | ✅ |
 | `09_machine_learning.py` | tab Clustering (silhouette, cluster, mappa, PCA 2D: PC1 85%, PC2 14%), Regressione (metriche 3 modelli × KFold/GroupKFold, importanza feature, predetto vs osservato, mappa residui), Limiti | ✅ senza DB |
-| `10_assistente_climatico.py` | chatbot con agenti e RAG | ⬜ T7.1 |
+| `10_assistente_climatico.py` | chat con streaming, `st.status` dei passi dell'agente, "Come ho ragionato" (percorso, tool, fonti RAG, avvisi), memoria di sessione, riscaldamento del modello, 4 domande d'esempio, tab Valutazione | ✅ |
 | `11_etica_e_limiti.py` | cosa è / non è, limiti di dati e modelli, privacy del chatbot, AI Act e GDPR | ✅ |
 
 Percorso consigliato per la demo:
