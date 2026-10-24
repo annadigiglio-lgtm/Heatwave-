@@ -30,7 +30,7 @@ Bonus già presenti o previsti: test automatici, documentazione curata.
 ## Schema della pipeline (stato attuale)
 
 <!-- PIPELINE:START -->
-_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 10:05: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
+_Generato da `scripts/aggiorna_pipeline.py` il 2026-10-24 10:47: non modificare a mano, si aggiorna da solo quando cambia [To-do per agenti](todo-agenti.md)._
 
 **Avanzamento:** 15/18 task obbligatori (83%) `████████░░`
 

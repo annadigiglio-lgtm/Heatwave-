@@ -255,6 +255,8 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   tab "Valutazione" in pagina 10
 - **Fare:** eseguire con Ollama reale (non è un test pytest); salvare
   metriche per prompt; scrivere nella wiki il prompt vincente e gli errori residui.
+- **Senza cache:** chiamare `esegui_agente(..., usa_cache=False)` (o
+  `HEATWAVE_CACHE_RISPOSTE=0`), altrimenti si misura la cache e non il modello.
 - **Regole di confronto (dal lavoro di T8.1):** cercare i `valori_chiave`
   come numeri interi (non sottostringhe: `0`, `1`, `2` darebbero falsi
   positivi) e normalizzare la virgola decimale italiana (`0,45` = `0.45`);
@@ -307,7 +309,9 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
 - **Dipende da:** T10.1
 - **Fare:** screenshot delle pagine 09, 10, 11; video di backup di 2 minuti;
   scaletta slide (problema → architettura → demo → sfide → conclusioni);
-  lista di risposte alle domande probabili (perché Ollama/qwen, cosa succede
+  prima della demo: porre una volta le domande della scaletta, così in diretta
+  arrivano dalla cache; a fine esame svuotare la cache. Lista di risposte alle
+  domande probabili (perché Ollama/qwen, cosa succede
   se l'LLM non risponde, come il RAG gestisce documenti lunghi, perché non
   serve il deep learning sui dati tabellari).
 - **Verifica:** prova generale cronometrata sotto i 10 minuti.

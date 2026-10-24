@@ -84,3 +84,6 @@ CLAUDE.md
 # Indice vettoriale del RAG del chatbot: rigenerabile con
 # python -m src.chatbot.build_knowledge_base
 data/vector_store/
+
+# Cache delle risposte del chatbot (rigenerabile, può contenere testo degli utenti)
+data/cache_risposte/

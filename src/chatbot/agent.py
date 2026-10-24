@@ -64,11 +64,11 @@ import inspect
 import json
 import re
 import time
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from typing import Any, Callable
 
-from src.chatbot import prompts
+from src.chatbot import cache_risposte, prompts
 from src.chatbot import tools as modulo_tools
 from src.chatbot.llm_client import ClientLLM, LLMNonDisponibile, crea_client
 from src.chatbot.memory import MemoriaConversazione
@@ -111,6 +111,7 @@ class RispostaAgente:
     chiamate_llm: int = 0
     durata_s: float = 0.0
     prompt_version: str = prompts.VERSIONE_PREDEFINITA
+    dalla_cache: bool = False
 
 
 @dataclass
@@ -576,6 +577,106 @@ def _messaggio_risultati(osservazioni: list[str]) -> str:
               'tool se manca un dato.')
 
 
+# ---------------------------------------------------------------------------
+# Pre-selezione del tool per regole (prestazioni su CPU)
+# ---------------------------------------------------------------------------
+# Quando la domanda è inequivocabile (un comune + "ondate", "cluster", "trend",
+# due comuni + "confronta"...) il tool lo sceglie Python e l'LLM viene chiamato
+# una sola volta, per scrivere la risposta: si risparmia la prima chiamata
+# (15-25 s su CPU). Nei casi incerti decide l'LLM con il ciclo della lezione
+# 20-03. Disattivabile con ``chatbot.preselezione_tool: false``.
+
+_PATTERN_CONFRONTO = [r'\bconfront', r'\bvs\b', r'\brispetto a\b', r'\bdifferenz',
+                      r'\bpiu (cald|fredd|fresc)', r'\bmeno (cald|fredd|fresc)']
+_PATTERN_ONDATE = [r'\bondat']
+_PATTERN_CLUSTER = [r'\bcluster\b', r'\bgruppo climatico\b', r'\bzona climatica\b']
+_PATTERN_COPERTURA = [r'\bcopertura\b', r'\bstazion', r'\barpa\b', r'\bche dati\b',
+                      r'\bquali dati\b', r'\bdati disponibili\b', r'\bin che provincia\b']
+_PATTERN_TREND = [r'\btrend\b', r'\btemperatur', r'\briscald', r'\bcambiat', r'\bcald',
+                  r'\bfredd', r'\bgradi\b']
+_PATTERN_REGIONALE = [r'\bpiemonte\b', r'\bregion', r'\bprovince\b', r'\bquadro\b']
+_RE_ANNO = re.compile(r'\b(20[0-2]\d)\b')
+
+
+def _preselezione_attiva() -> bool:
+    return bool(config.get('chatbot.preselezione_tool', True))
+
+
+def scegli_tool_per_regole(domanda: str) -> list[tuple[str, dict]]:
+    """Tool da chiamare senza chiedere all'LLM; lista vuota se la domanda non è inequivocabile."""
+    testo = _testo_per_regole(domanda)
+    comuni = sorted(comuni_citati(domanda), key=lambda c: f' {testo} '.find(f' {c} '))
+    anni = sorted({int(a) for a in _RE_ANNO.findall(domanda)})
+    if len(comuni) == 2 and _cerca(_PATTERN_CONFRONTO, testo):
+        return [('compare_locations', {'comune_a': comuni[0], 'comune_b': comuni[1]})]
+    if len(comuni) != 1:
+        if not comuni and len(anni) == 1 and _cerca(_PATTERN_REGIONALE, testo):
+            return [('get_regional_overview', {'anno': anni[0]})]
+        return []
+    comune = comuni[0]
+    if _cerca(_PATTERN_ONDATE, testo):
+        parametri = {'comune': comune}
+        if len(anni) == 1:
+            parametri['anno'] = anni[0]
+        return [('get_heatwave_summary', parametri)]
+    if _cerca(_PATTERN_CLUSTER, testo):
+        return [('get_climate_cluster', {'comune': comune})]
+    if _cerca(_PATTERN_COPERTURA, testo):
+        return [('get_data_coverage', {'comune': comune})]
+    if _cerca(_PATTERN_TREND, testo):
+        parametri = {'comune': comune}
+        if len(anni) >= 2:
+            parametri.update(anno_inizio=anni[0], anno_fine=anni[-1])
+        elif len(anni) == 1:
+            parametri['anno_inizio'] = anni[0]
+        return [('get_temperature_trend', parametri)]
+    return []
+
+
+def _testo_tool(richieste: list[tuple[str, dict]]) -> str:
+    """Le richieste nel formato TOOL/PARAMS, come le scriverebbe l'LLM (lezione 20-03)."""
+    return '\n'.join(f'TOOL: {nome}\nPARAMS: {_json(parametri)}' for nome, parametri in richieste)
+
+
+def _valore_breve(valore: Any) -> str:
+    if isinstance(valore, dict):
+        return ', '.join(f'{k}={_valore_breve(v)}' for k, v in valore.items())
+    if isinstance(valore, list):
+        return '; '.join(_valore_breve(v) for v in valore[:10])
+    return str(valore)
+
+
+def riassunto_risultato(nome: str, risultato: dict) -> str:
+    """Risultato di un tool in righe brevi: meno token del JSON, quindi meno tempo su CPU."""
+    if 'errore' in risultato:
+        return f'Risultato del tool {nome}: errore - {risultato["errore"]}'
+    righe = [f'Risultato del tool {nome} (fonte: {risultato.get("fonte", "n.d.")}; '
+             f'periodo: {risultato.get("periodo", "n.d.")}):']
+    valori = risultato.get('valori', {})
+    if isinstance(valori, dict):
+        righe += [f'- {chiave}: {_valore_breve(valore)}' for chiave, valore in valori.items()]
+    else:
+        righe.append(f'- {_valore_breve(valori)}')
+    if risultato.get('unita'):
+        righe.append(f'Unità: {_valore_breve(risultato["unita"])}')
+    for nota in (risultato.get('note') or [])[:3]:
+        righe.append(f'Nota: {nota}')
+    return '\n'.join(righe)
+
+
+def _esegui_preselezione(richieste: list[tuple[str, dict]], lavoro: _Lavoro) -> list[str]:
+    """Esegue i tool scelti per regole e restituisce le osservazioni per l'LLM."""
+    osservazioni = []
+    for nome, parametri in richieste:
+        _evento(lavoro, f'{PREFISSO_EVENTO_TOOL}{_descrivi_chiamata(nome, parametri)}…')
+        risultato = _esegui_tool_sicuro(nome, parametri)
+        lavoro.tool_chiamati.append({'nome': nome, 'parametri': parametri, 'risultato': risultato,
+                                     'scelto_da': 'regole'})
+        osservazioni.append(riassunto_risultato(nome, risultato))
+    logger.info(f'Pre-selezione per regole: {[n for n, _ in richieste]}')
+    return osservazioni
+
+
 def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto: str = '') -> str:
     """Ciclo ``for iterazione in range(max_iterations)`` della lezione 20-03."""
     testo_utente = (prompts.ISTRUZIONI_MISTO.format(contesto=contesto_misto, domanda=domanda)
@@ -584,6 +685,15 @@ def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto:
     max_iterazioni = int(config.get('chatbot.max_iterations', MAX_ITERAZIONI_PREDEFINITO))
     gia_eseguiti: dict[str, dict] = {}
     promemoria_inviato = False
+
+    preselezione = scegli_tool_per_regole(domanda) if _preselezione_attiva() else []
+    if preselezione:
+        osservazioni = _esegui_preselezione(preselezione, lavoro)
+        for (nome, parametri), voce in zip(preselezione, lavoro.tool_chiamati):
+            gia_eseguiti[f'{nome}:{json.dumps(parametri, sort_keys=True, ensure_ascii=False)}'] = (
+                voce['risultato'])
+        messaggi.append({'role': 'assistant', 'content': _testo_tool(preselezione)})
+        messaggi.append({'role': 'user', 'content': _messaggio_risultati(osservazioni)})
 
     for iterazione in range(max_iterazioni):
         _evento(lavoro, 'Il modello sceglie i dati da consultare…' if not lavoro.tool_chiamati
@@ -614,8 +724,7 @@ def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto:
             chiave = f'{nome}:{json.dumps(parametri, sort_keys=True, ensure_ascii=False)}'
             if chiave in gia_eseguiti:
                 risultato = gia_eseguiti[chiave]
-                osservazioni.append(f'Risultato del tool {nome} (già fornito): '
-                                    f'{_json(risultato)}')
+                osservazioni.append(riassunto_risultato(nome, risultato) + ' (già fornito)')
                 continue
             _evento(lavoro, f'{PREFISSO_EVENTO_TOOL}{_descrivi_chiamata(nome, parametri)}…')
             risultato = _esegui_tool_sicuro(nome, parametri)
@@ -624,8 +733,7 @@ def _analista(domanda: str, lavoro: _Lavoro, storia: list[dict], contesto_misto:
                                          'risultato': risultato})
             logger.info(f'[iterazione {iterazione + 1}] tool {nome} '
                         f'{"errore" if "errore" in risultato else "ok"}')
-            osservazioni.append(f'Risultato del tool {nome}: '
-                                f'{_json(risultato)}')
+            osservazioni.append(riassunto_risultato(nome, risultato))
         messaggi.append({'role': 'assistant', 'content': risposta})
         messaggi.append({'role': 'user', 'content': _messaggio_risultati(osservazioni)})
 
@@ -833,6 +941,7 @@ def esegui_agente(
     prompt_version: str | None = None,
     on_evento: CallbackTesto | None = None,
     on_token: CallbackTesto | None = None,
+    usa_cache: bool | None = None,
 ) -> RispostaAgente:
     """Risponde a una domanda passando per router, ruoli e Revisore.
 
@@ -844,6 +953,11 @@ def esegui_agente(
     ``on_evento`` riceve i passi di avanzamento, ``on_token`` i pezzi della
     risposta finale mentre l'LLM la genera (vedi la docstring del modulo).
     Il risultato è identico con o senza callback.
+
+    ``usa_cache`` (default: ``cache_risposte.cache_attiva()``) serve dalla cache
+    su disco una domanda già posta con la stessa storia, lo stesso prompt, lo
+    stesso modello e gli stessi dati (``RispostaAgente.dalla_cache``). Il
+    benchmark la disattiva per misurare sempre il modello.
     """
     inizio = time.perf_counter()
     versione = prompts.versione_prompt(prompt_version)
@@ -851,6 +965,14 @@ def esegui_agente(
     storia = memoria.messaggi() if memoria is not None else []
     domanda = (domanda or '').strip()
     logger.info(f'Domanda ricevuta ({len(domanda)} caratteri), prompt {versione}')
+
+    chiave_cache = None
+    if domanda and (cache_risposte.cache_attiva() if usa_cache is None else usa_cache):
+        chiave_cache = cache_risposte.chiave(domanda, storia, versione, _nome_modello(client),
+                                             prompts.SYSTEM_PROMPTS[versione])
+        salvata = cache_risposte.leggi(chiave_cache)
+        if salvata is not None:
+            return _da_cache(salvata, domanda, memoria, lavoro, inizio)
 
     verificabile = True
     if not domanda:
@@ -893,7 +1015,7 @@ def esegui_agente(
     logger.info(f'Percorso {percorso}: {len(lavoro.tool_chiamati)} tool '
                 f'({", ".join(t["nome"] for t in lavoro.tool_chiamati) or "nessuno"}), '
                 f'{lavoro.chiamate_llm} chiamate LLM, {durata} s')
-    return RispostaAgente(
+    risposta = RispostaAgente(
         testo=testo,
         percorso=percorso,
         tool_chiamati=lavoro.tool_chiamati,
@@ -903,3 +1025,33 @@ def esegui_agente(
         durata_s=durata,
         prompt_version=versione,
     )
+    # I rifiuti sono già istantanei; si salvano solo le risposte che costano tempo.
+    if chiave_cache is not None and percorso != 'fuori_ambito':
+        try:
+            cache_risposte.scrivi(chiave_cache, asdict(risposta))
+        except (OSError, TypeError) as errore:
+            logger.warning(f'Cache risposte non scritta ({type(errore).__name__})')
+    return risposta
+
+
+def _nome_modello(client: ClientLLM | None) -> str:
+    """Modello usato, per la chiave della cache (un altro modello = altre risposte)."""
+    if client is None:
+        return str(config.get('chatbot.model', ''))
+    return str(getattr(client, 'model', '') or type(client).__name__)
+
+
+def _da_cache(salvata: dict, domanda: str, memoria: MemoriaConversazione | None,
+              lavoro: _Lavoro, inizio: float) -> RispostaAgente:
+    """Risposta servita dalla cache: nessuna chiamata LLM, stessa traccia di allora."""
+    _evento(lavoro, 'Risposta dalla cache: domanda già posta con gli stessi dati')
+    if lavoro.on_token is not None:
+        lavoro.on_token(salvata['testo'])
+    if memoria is not None:
+        memoria.aggiungi('user', domanda)
+        memoria.aggiungi('assistant', salvata['testo'])
+    campi = {k: v for k, v in salvata.items() if k in RispostaAgente.__dataclass_fields__}
+    campi.update(chiamate_llm=0, durata_s=round(time.perf_counter() - inizio, 2),
+                 dalla_cache=True)
+    logger.info('Risposta servita dalla cache')
+    return RispostaAgente(**campi)

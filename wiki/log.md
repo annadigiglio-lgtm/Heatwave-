@@ -4174,3 +4174,24 @@ ragionato", errori `LLMNonDisponibile` senza traceback, input disabilitato se
 l'LLM non è pronto, tab Valutazione. Link dalla Home. 197 test passano.
 Nota: cambiare versione del prompt costa un nuovo riscaldamento (Ollama
 tiene in cache un solo prefisso).
+
+# 2026-10-24 — lentezza: pre-selezione del tool e cache delle risposte
+
+Hardware verificato: Intel i7-10510U (4 core), solo grafica integrata Intel UHD,
+16 GB RAM: niente GPU, qwen2.5:7b genera circa 3 token/s.
+- Provato `qwen2.5:3b`: circa 2 volte più veloce ma con errori (nome del comune
+  troncato, tool inesistente, spiegazione del cluster contraddittoria). Scelta
+  dell'utente: resta il 7b.
+- **Pre-selezione del tool** (`scegli_tool_per_regole`, `chatbot.preselezione_tool`):
+  1 chiamata LLM per le domande inequivocabili; risultati passati come
+  riassunto compatto. 7b: Alessandria 68 s, Cuneo/Novara 92 s, Casale 111 s,
+  Arona 42 s, metodo 113 s, misto 168 s; 6/6 corrette.
+- **Cache delle risposte** (`src/chatbot/cache_risposte.py`, scelta dell'utente):
+  la chiave comprende domanda normalizzata, storia, versione del prompt, modello
+  e firma dei dati (snapshot, indice RAG, metadati dei modelli); salvataggio
+  in `data/cache_risposte/` (in `.gitignore`); pulsante "Svuota cache" nella
+  pagina 10; disattivata nei test (`tests/conftest.py`) e nel benchmark.
+  Verifica reale: 30 s alla prima domanda, 0,0 s alla seconda.
+- Pagina 11 e `etica-e-limiti.md` aggiornate: la cache è l'unico salvataggio
+  delle conversazioni, locale, cancellabile e disattivabile.
+- 217 test passano.

@@ -121,11 +121,15 @@ chatbot:
   anthropic_model: ""           # da impostare solo se provider = anthropic
   temperature: 0.2
   max_iterations: 5             # limite del ciclo dell'agente
+  preselezione_tool: true       # domande inequivocabili: il tool lo sceglie Python, 1 sola chiamata LLM
   num_predict: 200              # token massimi per risposta: su questo PC si generano ~3 token/s
   request_timeout: 180          # secondi massimi di attesa di una risposta LLM
   keep_alive: "30m"             # tiene il modello in RAM tra le domande (prima chiamata su CPU: ~44 s)
   memory_window: 6              # ultimi N scambi passati all'LLM
   prompt_version: "v2"
+  cache_risposte:
+    enabled: true               # domande già poste (stessi dati, prompt e modello) servite all'istante
+    dir: "./data/cache_risposte"
   rag:
     persist_dir: "./data/vector_store"   # indice: embeddings .npy + chunk .parquet
     index_name: "heatwave_docs"

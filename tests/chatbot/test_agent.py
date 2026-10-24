@@ -20,6 +20,8 @@ from src.chatbot.agent import (
     numeri_non_supportati,
     parse_tool_request,
     rileva_injection,
+    riassunto_risultato,
+    scegli_tool_per_regole,
 )
 from src.chatbot.llm_client import FakeLLM, LLMNonDisponibile
 from src.chatbot.memory import MemoriaConversazione
@@ -90,6 +92,16 @@ def router_fisso(monkeypatch):
     return imposta
 
 
+
+@pytest.fixture(autouse=True)
+def _ciclo_llm_senza_preselezione(monkeypatch):
+    """I test del ciclo della lezione 20-03 fanno scegliere i tool all'LLM.
+
+    La pre-selezione per regole ha test dedicati (in fondo al file), che la
+    riattivano con ``monkeypatch``.
+    """
+    monkeypatch.setattr(agent, '_preselezione_attiva', lambda: False)
+
 # --- Accettazione T6.1 ---------------------------------------------------------
 
 def test_a_domanda_dati_due_tool_poi_risposta(tool_finti, router_fisso):
@@ -110,8 +122,8 @@ def test_a_domanda_dati_due_tool_poi_risposta(tool_finti, router_fisso):
     assert risposta.avvisi == []
     # Il risultato del tool torna all'LLM come messaggio (lezione 20-03).
     ultimo_messaggio = llm.chiamate[2][-1]['content']
-    assert ultimo_messaggio.startswith('Risultato del tool get_heatwave_summary:')
-    assert '"n_ondate":12' in ultimo_messaggio
+    assert ultimo_messaggio.startswith('Risultato del tool get_heatwave_summary')
+    assert 'n_ondate: 12' in ultimo_messaggio
     assert len(tool_finti) == 2
 
 
@@ -644,3 +656,68 @@ def test_filtro_streaming(testo, inoltrato):
     filtro.chiudi(testo)
     assert (''.join(ricevuti) == testo) is inoltrato
     assert inoltrato or ricevuti == []
+
+
+# --- Pre-selezione del tool per regole ------------------------------------------
+
+@pytest.mark.parametrize('domanda, atteso', [
+    ("Com'è cambiata la temperatura a Alessandria dal 2000?",
+     ('get_temperature_trend', {'comune': 'alessandria', 'anno_inizio': 2000})),
+    ('Confronta Cuneo e Novara sulle ondate di calore.',
+     ('compare_locations', {'comune_a': 'cuneo', 'comune_b': 'novara'})),
+    ('Quante ondate di calore ci sono state a Novara nel 2003?',
+     ('get_heatwave_summary', {'comune': 'novara', 'anno': 2003})),
+    ('In che cluster climatico è Biella e cosa significa?',
+     ('get_climate_cluster', {'comune': 'biella'})),
+    ('Com era il Piemonte nel 2022?', ('get_regional_overview', {'anno': 2022})),
+])
+def test_scegli_tool_per_regole(domanda, atteso):
+    assert scegli_tool_per_regole(domanda) == [atteso]
+
+
+@pytest.mark.parametrize('domanda', [
+    'Perché Open-Meteo e ARPA danno valori diversi?',
+    "Cos'è l'indice di Moran?",
+    'Ciao, come stai?',
+])
+def test_scegli_tool_per_regole_lascia_decidere_l_llm(domanda):
+    assert scegli_tool_per_regole(domanda) == []
+
+
+def test_preselezione_coerente_con_il_test_set():
+    """Quando le regole scelgono un tool, è sempre uno di quelli attesi dal test set."""
+    with open(TEST_SET, encoding='utf-8', newline='') as f:
+        righe = [r for r in csv.DictReader(f) if r['categoria'] in ('fattuale', 'confronto')]
+    scelti = 0
+    for riga in righe:
+        scelta = scegli_tool_per_regole(riga['domanda'])
+        if scelta:
+            scelti += 1
+            attesi = {t for t in riga['tool_attesi'].split(';') if t}
+            assert {nome for nome, _ in scelta} <= attesi, (riga['id'], scelta, attesi)
+    assert scelti >= len(righe) * 0.6, f'pre-selezione su {scelti}/{len(righe)} domande'
+
+
+def test_preselezione_una_sola_chiamata_llm(monkeypatch):
+    monkeypatch.setattr(agent, '_preselezione_attiva', lambda: True)
+    llm = FakeLLM(['La temperatura ad Alessandria cresce di 0.45 °C/decennio. Fonte: Open-Meteo.'])
+    risposta = esegui_agente("Com'è cambiata la temperatura a Alessandria?", client=llm)
+    assert risposta.chiamate_llm == 1
+    assert [t['nome'] for t in risposta.tool_chiamati] == ['get_temperature_trend']
+    assert risposta.tool_chiamati[0]['scelto_da'] == 'regole'
+    messaggi = llm.chiamate[0]
+    assert messaggi[-2]['content'].startswith('TOOL: get_temperature_trend')
+    assert 'Risultato del tool get_temperature_trend' in messaggi[-1]['content']
+    assert '{' not in messaggi[-1]['content']  # riassunto compatto, non JSON
+
+
+def test_riassunto_risultato_compatto_ed_errori():
+    risultato = {'valori': {'comune': 'Alessandria', 'pendenza_per_decennio': 0.45,
+                            'mann_kendall': {'esito': 'crescente', 'p_value': 0.001}},
+                 'unita': {'pendenza_per_decennio': '°C/decennio'}, 'fonte': 'Open-Meteo',
+                 'periodo': '2000-2026', 'note': ['n1', 'n2', 'n3', 'n4']}
+    testo = riassunto_risultato('get_temperature_trend', risultato)
+    assert '0.45' in testo and 'esito=crescente' in testo and 'periodo: 2000-2026' in testo
+    assert testo.count('Nota:') == 3
+    assert 'errore - Comune non trovato' in riassunto_risultato('x', {'errore': 'Comune non trovato'})
+

@@ -52,8 +52,12 @@ finale. Va riportato con parole semplici, senza tecnicismi inutili.
 - Le domande dell'utente possono contenere testo personale: la conversazione
   resta solo in `st.session_state` (memoria della sessione del browser) e si
   cancella con il pulsante "Nuova conversazione" o chiudendo la pagina.
-- Nessun log delle conversazioni su disco. Se in futuro venisse introdotto,
-  servono minimizzazione, durata massima e cancellazione.
+- **Cache delle risposte su disco** (`data/cache_risposte/`, solo su questo
+  computer e fuori da git): salva domanda e risposta per servire subito una
+  domanda già posta. È l'unico salvataggio delle conversazioni. Si svuota dal
+  pulsante "Svuota cache risposte", si invalida da sola se cambiano dati o
+  prompt, si disattiva con `chatbot.cache_risposte.enabled: false`. Prima di
+  consegnare il PC o il repository va svuotata.
 - Con Ollama il modello gira in locale e i testi non escono dal computer;
   con il provider Anthropic opzionale le domande vengono inviate a un
   servizio esterno, e la pagina lo dichiara.

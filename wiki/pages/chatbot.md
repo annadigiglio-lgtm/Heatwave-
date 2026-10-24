@@ -248,6 +248,17 @@ Prova reale dell'agente (2026-10-24, v2): dati 80–180 s, metodo circa 130 s,
 misto circa 190 s, rifiuti istantanei, risposte corrette 6/6. Il limite è
 l'hardware (circa 3 token/s in generazione su CPU), non il codice.
 
+**Pre-selezione del tool** (`chatbot.preselezione_tool: true`, funzione
+`agent.scegli_tool_per_regole`): se la domanda è inequivocabile (un comune
+più ondate, cluster, copertura o trend; due comuni più confronta; un anno più
+Piemonte o regione) il tool lo sceglie Python, il risultato arriva all'LLM come
+elenco compatto (`riassunto_risultato`, non JSON) e l'LLM viene chiamato una
+volta sola. Negli altri casi vale il ciclo della lezione 20-03. Agente
+"ibrido": le regole fanno ciò che è deterministico, l'LLM scrive e ragiona sui
+casi aperti. Su `qwen2.5:3b` la scelta del tool fatta dal modello produceva
+errori (nome del comune troncato, tool inesistente), che la pre-selezione
+elimina.
+
 Conseguenze di progetto (T6.1, T7.1):
 - Il router per parole chiave è obbligatorio: risparmia una chiamata LLM per domanda.
 - Il Revisore è in Python; il secondo passaggio LLM solo se il controllo fallisce.

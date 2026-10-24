@@ -26,6 +26,7 @@ import streamlit as st
 
 from components import PROJECT_ROOT
 from components.styling import inject_custom_css, render_sidebar_branding
+from src.chatbot import cache_risposte
 from src.chatbot.agent import PREFISSO_EVENTO_TOOL, esegui_agente, riscalda_modello
 from src.chatbot.llm_client import LLMNonDisponibile, stato_llm
 from src.chatbot.memory import FINESTRA_PREDEFINITA, MemoriaConversazione
@@ -120,6 +121,7 @@ def dettagli_risposta(risposta) -> dict:
         'chiamate_llm': risposta.chiamate_llm,
         'durata_s': risposta.durata_s,
         'prompt_version': risposta.prompt_version,
+        'dalla_cache': getattr(risposta, 'dalla_cache', False),
     }
 
 
@@ -127,6 +129,9 @@ def mostra_ragionamento(dettagli: dict) -> None:
     """Expander "Come ho ragionato": valori calcolati, fonti e avvisi separati dal testo."""
     for avviso in dettagli['avvisi']:
         st.warning(avviso, icon='⚠️')
+    if dettagli.get('dalla_cache'):
+        st.caption('⚡ Risposta dalla cache: la stessa domanda era già stata posta con gli '
+                   'stessi dati, lo stesso modello e lo stesso prompt.')
     with st.expander('Come ho ragionato'):
         st.markdown(
             f"**Percorso:** {ETICHETTE_PERCORSO.get(dettagli['percorso'], dettagli['percorso'])}  \n"
@@ -258,7 +263,15 @@ with st.sidebar:
         st.button(esempio, key=f'esempio_{numero}', on_click=scegli_esempio, args=(esempio,),
                   disabled=not llm_ok, width='stretch')
     st.caption('⏱️ Su questo PC il modello gira su CPU: una risposta richiede 1–3 minuti; '
-               'i rifiuti sono immediati.')
+               'i rifiuti sono immediati e le domande già poste arrivano dalla cache.')
+    if cache_risposte.cache_attiva():
+        salvate = cache_risposte.conta()
+        if st.button(f'🧹 Svuota cache risposte ({salvate})', disabled=not salvate,
+                     width='stretch',
+                     help='Le risposte salvate si invalidano da sole se cambiano dati, '
+                          'indice dei documenti o prompt.'):
+            cache_risposte.svuota()
+            st.rerun()
 
 
 # ---------------------------------------------------------------------------
