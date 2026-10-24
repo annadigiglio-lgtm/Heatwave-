@@ -226,14 +226,14 @@ def test_stato_llm_server_spento(monkeypatch):
         raise ConnectionError('Failed to connect to Ollama')
 
     monkeypatch.setattr(llm_client, '_modelli_ollama_scaricati', spento)
-    ok, messaggio = stato_llm()
+    ok, messaggio = stato_llm('ollama')
     assert ok is False
     assert 'Avvia Ollama' in messaggio
 
 
 def test_stato_llm_modelli_mancanti(monkeypatch):
     monkeypatch.setattr(llm_client, '_modelli_ollama_scaricati', lambda host: {'llama3.2:latest'})
-    ok, messaggio = stato_llm()
+    ok, messaggio = stato_llm('ollama')
     assert ok is False
     assert 'ollama pull qwen2.5:7b' in messaggio
     assert 'ollama pull bge-m3' in messaggio
@@ -243,7 +243,7 @@ def test_stato_llm_pronto(monkeypatch):
     monkeypatch.setattr(
         llm_client, '_modelli_ollama_scaricati', lambda host: {'qwen2.5:7b', 'bge-m3:latest'}
     )
-    ok, messaggio = stato_llm()
+    ok, messaggio = stato_llm('ollama')
     assert ok is True
     assert 'qwen2.5:7b' in messaggio
 

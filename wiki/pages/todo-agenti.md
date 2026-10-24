@@ -255,6 +255,7 @@ Stati: ⬜ da fare · 🔄 in corso · ✅ fatto · ⛔ bloccato.
   tab "Valutazione" in pagina 10
 - **Fare:** eseguire con Ollama reale (non è un test pytest); salvare
   metriche per prompt; scrivere nella wiki il prompt vincente e gli errori residui.
+- **Provider:** eseguirlo con Gemini (predefinito, circa 28 × 2 domande in pochi minuti) e, se c'è tempo, anche con Ollama per confrontare; con il piano gratuito di Gemini aspettare 1–2 s tra le domande e gestire i 429 (limite di richieste) riprovando dopo una pausa.
 - **Senza cache:** chiamare `esegui_agente(..., usa_cache=False)` (o
   `HEATWAVE_CACHE_RISPOSTE=0`), altrimenti si misura la cache e non il modello.
 - **Regole di confronto (dal lavoro di T8.1):** cercare i `valori_chiave`

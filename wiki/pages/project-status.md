@@ -11,7 +11,7 @@ Sequenza di lavoro in [Pipeline d'esame](roadmap-esame.md), attività in
 | 1 | Dati con pandas | ✅ | ETL, `DataCleaner`, snapshot Parquet |
 | 2 | Visualizzazione | ✅ | 8 pagine Plotly/Folium, 3 progetti QGIS |
 | 3 | ML classificazione/regressione (scikit-learn) | ✅ | regressore RandomForest vs Linear vs MLP, GroupKFold R² 0,889 (T2.1) |
-| 4 | API LLM | ✅ | `src/chatbot/llm_client.py`: Ollama qwen2.5:7b + bge-m3, Anthropic opzionale (T3.1) |
+| 4 | API LLM | ✅ | `src/chatbot/llm_client.py`: Gemini 3.5 Flash (predefinito, 1–10 s), Ollama qwen2.5:7b locale, Anthropic opzionale; embedding bge-m3 locali |
 | 5 | Agente con almeno 2 tool | ✅ | `src/chatbot/agent.py`: router, analista (6 tool), ricercatore (RAG), revisore; prova reale 6/6 (T6.1) |
 | 6 | RAG | ✅ | `src/chatbot/rag.py`: embedding bge-m3 + indice numpy, 4 schede curate, cancello 6/6 (T4.1, T4.2) |
 | — | Streamlit funzionante | ✅ | `dashboard/Home.py` + 10 pagine (09 ML, 10 Assistente, 11 Etica) |
@@ -41,7 +41,7 @@ risolti il 2026-10-23.
 - Repository d'esame: https://github.com/annadigiglio-lgtm/Heatwave- (pubblico).
 - Le analisi scientifiche (Moran's I, ARPA, STL, QGIS) restano.
 - L'app (dashboard e chatbot) legge solo Parquet e modelli salvati.
-- LLM locale con Ollama; Anthropic come provider opzionale.
+- LLM: Gemini (API Google, piano gratuito) come predefinito per la velocità; Ollama come alternativa locale e privata selezionabile; Anthropic opzionale. Embedding sempre locali (Ollama).
 - Agente scritto a mano (schema della lezione 20), niente CrewAI/LangChain.
 - RAG con embedding Ollama (`bge-m3`) e indice vettoriale numpy al posto di
   ChromaDB: Smart App Control di Windows blocca `orjson`, `torch` e `regex`.

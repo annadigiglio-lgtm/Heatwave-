@@ -41,6 +41,7 @@ MAX_TOKENS_ANTHROPIC = 1024
 TEMPERATURA_PREDEFINITA = 0.2
 KEEP_ALIVE_PREDEFINITO = '30m'
 TIMEOUT_RISPOSTA_PREDEFINITO = 180.0  # secondi; su CPU una risposta lunga può superare il minuto
+TENTATIVI_GEMINI = 2  # tentativi totali per richiesta (1 + 1 ripetizione)
 VARIABILE_FAKE = 'HEATWAVE_FAKE_LLM'
 PROVIDER = ('ollama', 'gemini', 'anthropic')
 RISPOSTA_FAKE_PREDEFINITA = 'Risposta di prova del FakeLLM.'
@@ -435,7 +436,13 @@ class GeminiClient:
         from google import genai  # import locale: serve solo a chi usa questo provider
         from google.genai import types
         self._client = genai.Client(
-            api_key=chiave, http_options=types.HttpOptions(timeout=int(self.timeout * 1000)))
+            api_key=chiave,
+            http_options=types.HttpOptions(
+                timeout=int(self.timeout * 1000),
+                # Senza limite la libreria ritenta in silenzio i 429/5xx anche per
+                # minuti (visto con un modello sovraccarico): meglio un errore chiaro.
+                retry_options=types.HttpRetryOptions(attempts=TENTATIVI_GEMINI),
+            ))
 
     def _configurazione(self, system: str, temperature: float | None, max_tokens: int | None):
         from google.genai import types

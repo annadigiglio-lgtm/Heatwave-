@@ -4208,3 +4208,13 @@ riscaldamento solo per Ollama, avviso privacy. Pagina 11 e
 `etica-e-limiti.md` aggiornate. La cache resta accesa. 226 test passano.
 Da fare: inserimento di `GOOGLE_API_KEY` da parte dell'utente, verifica del nome
 del modello disponibile, prova reale, scelta del provider predefinito.
+
+# 2026-10-24 — Gemini 3.5 Flash predefinito: lentezza risolta
+
+Chiave `GOOGLE_API_KEY` inserita dall'utente nel `.env` (non tracciato). Modelli
+provati: 2.5-flash non disponibile (404), 3.8-flash e flash-latest
+sovraccarichi (504), flash-lite-latest incompatibile con `thinking_budget`
+(400). Scelto `gemini-3.5-flash`: prova reale 6/6 corrette in 1,4–10,6 s
+(contro 42–168 s di Ollama su CPU). Tentativi automatici limitati a 2.
+`chatbot.provider: gemini`; Ollama resta selezionabile nella pagina 10.
+226 test passano.

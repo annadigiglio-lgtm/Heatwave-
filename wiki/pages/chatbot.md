@@ -82,6 +82,25 @@ sceglie dalla barra laterale (Gemini veloce oppure Ollama locale e privato);
 gli embedding del RAG restano su Ollama. Avvertenza privacy nella barra
 laterale e nella pagina 11.
 
+Scelta del modello (verificata il 2026-10-24 con la chiave dell'utente):
+`gemini-2.5-flash` non è più disponibile ai nuovi utenti (404),
+`gemini-3.8-flash` e `gemini-flash-latest` erano sovraccarichi (504; senza
+limite la libreria ritentava per circa 2 minuti, ora `TENTATIVI_GEMINI = 2`),
+`gemini-flash-lite-latest` rifiuta `thinking_budget` (400). Scelto
+**`gemini-3.5-flash`**, motore predefinito (`chatbot.provider: gemini`).
+
+| Domanda (prova reale, senza cache) | Ollama qwen2.5:7b | Gemini 3.5 Flash |
+|---|---:|---:|
+| Alessandria (dati) | 68 s | 2,3 s |
+| Cuneo contro Novara (dati) | 92 s | 1,7 s |
+| Open-Meteo/ARPA (metodo) | 113 s | 10,6 s |
+| Biella (misto) | 168 s | 5,6 s |
+| Casale Monferrato (dati) | 111 s | 1,7 s |
+| Arona (dato assente) | 42 s | 1,4 s |
+
+6/6 corrette con entrambi; le risposte di Gemini riportano tutti i numeri dei
+tool e le fonti, senza avvisi del Revisore.
+
 ## 2. Tool dati (`tools.py`) — lezione 20
 
 Leggono **solo** `data/dashboard_export/*.parquet` e `models/`. Ogni tool:

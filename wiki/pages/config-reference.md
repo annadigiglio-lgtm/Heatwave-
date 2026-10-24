@@ -29,5 +29,6 @@ chiama `load_dotenv()`, e le variabili d'ambiente `DB_HOST`, `DB_PORT`,
 | `LOG_LEVEL`, `STREAMLIT_SERVER_PORT` | servizio |
 | `OLLAMA_HOST` | *(nuova)* indirizzo di Ollama, predefinito `http://localhost:11434` |
 | `ANTHROPIC_API_KEY` | *(nuova, facoltativa)* solo con `chatbot.provider: anthropic` |
+| `GOOGLE_API_KEY` | chiave gratuita da aistudio.google.com per `chatbot.provider: gemini` (predefinito) |
 
 Il file `.env.example` elenca le variabili con valori segnaposto.
